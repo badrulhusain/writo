@@ -6,7 +6,7 @@ import {
   apiAuthPrefix,
   authRoutes,
   publicRoutes,
-} from "./routes";
+} from "@/routes";
 
 const { auth } = NextAuth(authConfig);
 

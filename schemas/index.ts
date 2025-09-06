@@ -1,8 +1,5 @@
 import * as z from "zod";
-export enum UserRole {
-  ADMIN = "ADMIN",
-  USER = "USER"
-}
+import { UserRole } from "@prisma/client";
 
 export const SettingsSchema = z.object({
   name: z.optional(z.string()),
