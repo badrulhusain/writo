@@ -55,6 +55,7 @@ npm i
 ```
 
 ### Setup .env file
+i am doing dome changes
 
 
 ```js
