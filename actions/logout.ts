@@ -1,6 +1,6 @@
 "use server";
 
-import { signOut } from "@/auth";
+import { signOut } from "@/Auth";
 
 export const logout = async () => {
   await signOut();

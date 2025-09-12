@@ -4,7 +4,7 @@ import * as z from "zod";
 import { AuthError } from "next-auth";
 
 import { db } from "@/lib/db";
-import { signIn } from "@/auth";
+import { signIn } from "@/Auth";
 import { LoginSchema } from "@/schemas";
 import { getUserByEmail } from "@/data/user";
 import { getTwoFactorTokenByEmail } from "@/data/two-factor-token";
@@ -39,18 +39,7 @@ export const login = async (
     return { error: "Email does not exist!" }
   }
 
-  if (!existingUser.emailVerified) {
-    const verificationToken = await generateVerificationToken(
-      existingUser.email,
-    );
 
-    await sendVerificationEmail(
-      verificationToken.email,
-      verificationToken.token,
-    );
-
-    return { success: "Confirmation email sent!" };
-  }
 
   if (existingUser.isTwoFactorEnabled && existingUser.email) {
     if (code) {
@@ -106,8 +95,13 @@ export const login = async (
     await signIn("credentials", {
       email,
       password,
-      redirectTo: callbackUrl || DEFAULT_LOGIN_REDIRECT,
+      // Option 1: Use callbackUrl if provided, otherwise default to /home
+      redirectTo: callbackUrl || "/home",
+      
+      // Option 2: Always redirect to /home (uncomment this line and comment above)
+      // redirectTo: "/home",
     })
+    console.log(email, password)
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
