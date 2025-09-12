@@ -96,7 +96,7 @@ export const login = async (
       email,
       password,
       // Option 1: Use callbackUrl if provided, otherwise default to /home
-      redirectTo: callbackUrl || "/home",
+      redirectTo:  "/home",
       
       // Option 2: Always redirect to /home (uncomment this line and comment above)
       // redirectTo: "/home",

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-
+import { logout } from "@/actions/logout";
 import {
   LogOutIcon,
   MenuIcon,
@@ -18,7 +18,13 @@ const sidebarItems = [
   { href: "/dashboard", icon: Share2Icon, label: "User Dashboard    " },
   { href: "/video-upload", icon: UploadIcon, label: "Video Upload" },
 ];
-
+const handleSignOut = async () => {
+  // Implement sign-out logic here
+  // For example, you might want to call an API endpoint to log out the user
+  // and then redirect to the login page.
+  
+  console.log("Sign out clicked");
+}
 export default function AppLayout({
   children,
 }: Readonly<{
@@ -97,13 +103,11 @@ export default function AppLayout({
           </ul>
           <div className="p-4 mt-auto">
             <button
-              onClick={() => {
-                // handleSignOut();
-              }}
-              className="btn w-full flex items-center space-x-2 bg-[#1a3258] text-white font-serif hover:bg-[#29406a]"
+              onClick={logout}
+              className="btn w-full flex items-center space-x-2 cursor-pointer bg-[#1a3258] text-white font-serif hover:bg-[#29406a]"
             >
               <LogOutIcon className="w-5 h-5" />
-              <span>Sign Out</span>
+              <span   onClick={logout} className="" >Sign Out</span>
             </button>
           </div>
         </aside>
