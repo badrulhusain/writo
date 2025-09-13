@@ -8,8 +8,8 @@ import { MenuIcon } from "lucide-react";
 
 const sidebarItems = [
   { href: "/home", label: "Home" },
-  { href: "/blog", label: "Explore" },
-  { href: "/dashboard", label: "Write" },
+  { href: "/blog", label: "Blog" },
+  { href: "/dashboard", label: "Dashboard" },
 ];
 
 export default function AppLayout({
@@ -85,6 +85,7 @@ export default function AppLayout({
                   </svg>
                 </button>
               </div>
+              
             </div>
           </header>
           <main className="flex-1 px-10 py-8">
