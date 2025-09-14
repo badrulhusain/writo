@@ -7,14 +7,13 @@ import authConfig from "@/auth.config";
 import { getUserById } from "@/data/user";
 import { getTwoFactorConfirmationByUserId } from "@/data/two-factor-confirmation";
 import { getAccountByUserId } from "./data/account";
-import { useSession } from "next-auth/react";
 
 export const {
   handlers: { GET, POST },
   auth,
   signIn,
   signOut,
-
+  update,
 } = NextAuth({
   pages: {
     signIn: "/auth/login",
@@ -93,8 +92,6 @@ export const {
     }
   },
   adapter: PrismaAdapter(db),
-  session: { strategy: "jwt" ,
-     maxAge: 3 * 24 * 60 * 60, 
-  },
+  session: { strategy: "jwt" },
   ...authConfig,
 });

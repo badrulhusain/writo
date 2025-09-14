@@ -1,7 +1,6 @@
-// prisma/schema.prisma
 datasource db {
   provider  = "postgresql"
-  url  	    = env("DATABASE_URL")
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -25,6 +24,43 @@ model User {
   accounts      Account[]
   isTwoFactorEnabled Boolean @default(false)
   twoFactorConfirmation TwoFactorConfirmation?
+  blogs         Blog[]
+}
+
+model Blog {
+  id          String     @id @default(cuid())
+  title       String
+  content     String
+  authorId    String
+  categoryId  String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  author      User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category    Category?  @relation(fields: [categoryId], references: [id])
+  tags        BlogTag[]  // many-to-many via join table
+}
+
+model Category {
+  id    String @id @default(cuid())
+  name  String @unique
+  blogs Blog[]
+}
+
+model Tag {
+  id    String    @id @default(cuid())
+  name  String    @unique
+  blogs BlogTag[]
+}
+
+model BlogTag {
+  blogId String
+  tagId  String
+
+  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([blogId, tagId]) // composite key
 }
 
 model Account {
