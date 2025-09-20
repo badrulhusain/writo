@@ -42,13 +42,6 @@ Key Features:
 
 **Node version 18.7.x**
 
-### Cloning the repository
-
-```shell
-git clone https://github.com/AsharibAli/next-authjs-v5
-```
-
-### Install packages
 
 ```shell
 npm i
