@@ -3,7 +3,7 @@
 This is a repository for Next Auth v5 - Advanced Guide (2025)
 
 [VIDEO TUTORIAL](https://youtu.be/1MTyCvS05V4)
-
+doing some changes
 Key Features:
 - 🔐 Next-auth v5 (Auth.js)
 - 🚀 Next.js 14 with server actions
