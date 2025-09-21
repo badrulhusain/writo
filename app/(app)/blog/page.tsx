@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-
+import { TypingAnimation } from "@/components/ui/typing-animation";
 interface Blog {
   id: string
   title: string
@@ -29,7 +29,7 @@ function Blog() {
       })
   }, [])
 
-  if (loading) return <div>Loading...</div>
+  if (loading) return <div className="flex justify-center items-center min-h-screen"><TypingAnimation>LOADING...</TypingAnimation></div>
 
   return (
     <div className="container mx-auto p-4">
@@ -49,6 +49,7 @@ function Blog() {
           </Link>
         ))}
       </div>
+    
     </div>
   )
 }

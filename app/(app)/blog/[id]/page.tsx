@@ -44,7 +44,7 @@ const BlogPost = () => {
   }, [params.id]);
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64">Loading...</div>;
+    return <span className="loading loading-ring loading-xl"></span>
   }
 
   if (error) {
