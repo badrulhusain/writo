@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/actions/logout";
 import { MenuIcon } from "lucide-react";
-
+import { Button } from '@/components/ui/button'
 const sidebarItems = [
   { href: "/home", label: "Home" },
   { href: "/blog", label: "Blog" },
@@ -84,6 +84,7 @@ export default function AppLayout({
                     <path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216ZM48,184c7.7-13.24,16-43.92,16-80a64,64,0,1,1,128,0c0,36.05,8.28,66.73,16,80Z"></path>
                   </svg>
                 </button>
+                <Button ><Link href="/blog/create">Create</Link></Button>
               </div>
               
             </div>
@@ -122,6 +123,7 @@ export default function AppLayout({
               ))}
             </ul>
             <div className="p-4 mt-auto">
+         
               <button
                 onClick={logout}
                 className="w-full px-4 py-2 text-sm font-medium text-[var(--primary-color)] border border-[var(--primary-color)] rounded-md hover:bg-[var(--primary-color)] hover:text-white transition-colors"
