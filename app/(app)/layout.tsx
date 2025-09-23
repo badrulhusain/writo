@@ -1,36 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { logout } from "@/actions/logout";
-import { MenuIcon } from "lucide-react";
-import { Button } from '@/components/ui/button'
-const sidebarItems = [
-  { href: "/home", label: "Home" },
-  { href: "/blog", label: "Blog" },
-  { href: "/dashboard", label: "Dashboard" },
-];
+import { useCurrentUser } from '@/hooks/use-current-user';
 
 export default function AppLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
+  const user = useCurrentUser();
 
-  const handleLogoClick = () => {
-    router.push("/");
+  const getPageTitle = (path: string) => {
+    if (path === '/home') return 'Home';
+    if (path === '/blog') return 'Blog';
+    if (path === '/dashboard') return 'Dashboard';
+    return 'Page';
   };
 
   return (
     <>
       <link
-        href="https://fonts.googleapis.com/css2?display=swap&family=Newsreader:wght@400;500;700;800&family=Noto+Sans:wght@400;500;700;900"
+        href="https://fonts.googleapis.com/css2?display=swap&family=Inter:wght@400;500;700;900&family=Newsreader:wght@400;500;700;800&family=Noto+Sans:wght@400;500;700;900"
         rel="stylesheet"
       />
+      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
       <style jsx>{`
         :root {
           --primary-color: #1173d4;
@@ -42,96 +39,64 @@ export default function AppLayout({
           font-family: "Noto Sans", sans-serif;
         }
       `}</style>
-      <div className="drawer font-noto-sans bg-gray-50 text-gray-800 min-h-screen">
-        <input
-          id="sidebar-drawer"
-          type="checkbox"
-          className="drawer-toggle"
-          checked={sidebarOpen}
-          onChange={() => setSidebarOpen(!sidebarOpen)}
-        />
-        <div className="drawer-content flex flex-col">
-          <header className="flex items-center justify-between whitespace-nowrap border-b border-gray-200 px-10 py-4 bg-white">
-            <div className="flex items-center gap-8">
-              <div className="flex-none">
-                <label
-                  htmlFor="sidebar-drawer"
-                  className="btn btn-square btn-ghost drawer-button"
-                >
-                  <MenuIcon />
-                </label>
+      <div className="relative flex size-full min-h-screen flex-col bg-[#111418] dark group/design-root overflow-x-hidden" style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}>
+        <div className="layout-container flex h-full grow flex-col">
+          <div className="flex flex-1">
+            <aside className="w-80 flex flex-col bg-[#181C20] p-6 shrink-0">
+              <div className="flex items-center gap-3 mb-8">
+                <h1 className="text-white text-2xl font-bold">BlogForge AI</h1>
               </div>
-              <div className="flex items-center gap-2.5 text-gray-900">
-                <div className="size-6 text-[var(--primary-color)]">
-                  <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6 6H42L36 24L42 42H6L12 24L6 6Z" fill="currentColor"></path>
-                  </svg>
-                </div>
-                <h2 className="text-gray-900 text-xl font-bold font-newsreader tracking-tight cursor-pointer" onClick={handleLogoClick}>
-                  Academic Blog
-                </h2>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="hidden md:flex items-center gap-2">
-                <button className="flex h-10 w-10 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors">
-                  <svg fill="currentColor" height="20px" viewBox="0 0 256 256" width="20px" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path>
-                  </svg>
+              <nav className="flex flex-col gap-2 flex-grow">
+                <Link className={`flex items-center gap-3 px-4 py-2.5 rounded-lg ${pathname === '/dashboard' ? 'bg-[#283039]' : ''} text-white hover:bg-[#283039]`} href="/dashboard">
+                  <span className="material-symbols-outlined">description</span>
+                  <span className="text-sm font-medium">My Posts</span>
+                </Link>
+                <Link className={`flex items-center gap-3 px-4 py-2.5 rounded-lg ${pathname === '/blog' ? 'bg-[#283039]' : ''} text-white hover:bg-[#283039]`} href="/blog">
+                  <span className="material-symbols-outlined">public</span>
+                  <span className="text-sm font-medium">All Blogs</span>
+                </Link>
+                <a className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-white hover:bg-[#283039]" href="#">
+                  <span className="material-symbols-outlined">group</span>
+                  <span className="text-sm font-medium">Authors</span>
+                </a>
+                <Link className={`flex items-center gap-3 px-4 py-2.5 rounded-lg ${pathname === '/settings' ? 'bg-[#283039]' : ''} text-white hover:bg-[#283039]`} href="/settings">
+                  <span className="material-symbols-outlined">settings</span>
+                  <span className="text-sm font-medium">Settings</span>
+                </Link>
+              </nav>
+              <div className="flex flex-col gap-4">
+                <button className="flex w-full items-center justify-center rounded-lg h-11 px-4 bg-[#1172d4] text-white text-sm font-bold">
+                  <span className="truncate">Upgrade to Pro</span>
                 </button>
-                <button className="flex h-10 w-10 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors">
-                  <svg fill="currentColor" height="20px" viewBox="0 0 256 256" width="20px" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216ZM48,184c7.7-13.24,16-43.92,16-80a64,64,0,1,1,128,0c0,36.05,8.28,66.73,16,80Z"></path>
-                  </svg>
-                </button>
-                <Button ><Link href="/blog/create">Create</Link></Button>
+                <a className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-white hover:bg-[#283039]" href="#">
+                  <span className="material-symbols-outlined">group_add</span>
+                  <span className="text-sm font-medium">Invite friends</span>
+                </a>
               </div>
-              
-            </div>
-          </header>
-          <main className="flex-1 px-10 py-8">
-            <div className="max-w-6xl mx-auto">
-              {children}
-            </div>
-          </main>
-        </div>
-        <div className="drawer-side">
-          <label htmlFor="sidebar-drawer" className="drawer-overlay"></label>
-          <aside className="bg-white w-64 h-full flex flex-col border-r border-gray-200">
-            <div className="flex items-center justify-center py-6">
-              <div className="size-8 text-[var(--primary-color)]">
-                <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M6 6H42L36 24L42 42H6L12 24L6 6Z" fill="currentColor"></path>
-                </svg>
+            </aside>
+            <main className="flex-1 p-8">
+              {pathname !== '/dashboard' && (
+                <header className="flex justify-between items-center mb-8">
+                  <div>
+                    <h1 className="text-white text-4xl font-bold">{getPageTitle(pathname)}</h1>
+                    <p className="text-[#9dabb9] text-base mt-1">Welcome back, {user?.name?.split(' ')[0] || 'User'}.</p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <button className="flex items-center justify-center gap-2 rounded-lg h-11 px-5 bg-[#1172d4] text-white text-sm font-bold hover:bg-[#0f63b6]">
+                      <span className="material-symbols-outlined">add_circle</span>
+                      <span className="truncate">Create New Post</span>
+                    </button>
+                    <div className="relative">
+                      <button className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-14 border-2 border-blue-500" style={{ backgroundImage: `url("${user?.image || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDMuFAcrexZnu-MnPc33xMsc_TgHughy31oOlB7PluORPRu3VUrPUpFWE74H9EjDfs2yIRFOeEo5RzyD0OrkPUpPyyUnJokv8JD5iJRKA1KeTGdQUdsiwEIW-1oiFW7NQigRO41QzDt53CHzwfcClIRSs8MYM6Dq70QX0OaBmEtbThHU1nq1Oc16BvkQHDoU8irFLAKvyqht4k5iKhD1g4EJn6X-z8XRVg1b7DQ0NAoow1PmDOkMjSsmxLpBlOFrxP6k3NhtlrY3ME'}"` }}></button>
+                    </div>
+                  </div>
+                </header>
+              )}
+              <div className={pathname === '/dashboard' ? '' : 'max-w-6xl mx-auto'}>
+                {children}
               </div>
-            </div>
-            <ul className="menu p-4 w-full text-base-content flex-grow">
-              {sidebarItems.map((item) => (
-                <li key={item.href} className="mb-2">
-                  <Link
-                    href={item.href}
-                    className={`flex items-center px-4 py-2 rounded-md font-medium transition-colors ${
-                      pathname === item.href
-                        ? "bg-[var(--primary-color)] text-white"
-                        : "hover:bg-gray-100 text-gray-700"
-                    }`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <span className="font-noto-sans">{item.label}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            <div className="p-4 mt-auto">
-         
-              <button
-                onClick={logout}
-                className="w-full px-4 py-2 text-sm font-medium text-[var(--primary-color)] border border-[var(--primary-color)] rounded-md hover:bg-[var(--primary-color)] hover:text-white transition-colors"
-              >
-                Log Out
-              </button>
-            </div>
-          </aside>
+            </main>
+          </div>
         </div>
       </div>
     </>
