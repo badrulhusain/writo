@@ -10,8 +10,8 @@ function Dashboard() {
     <div>
             <header className="flex justify-between items-center mb-8">
               <div>
-                <h1 className="text-white text-4xl font-bold">My Posts</h1>
-                <p className="text-[#9dabb9] text-base mt-1">Welcome back, {user?.name?.split(' ')[0] || 'Sophia'}. Your creative hub awaits.</p>
+                <h1 className="text-gray-900 text-4xl font-bold">My Posts</h1>
+                <p className="text-gray-600 text-base mt-1">Welcome back, {user?.name?.split(' ')[0] || 'Sophia'}. Your creative hub awaits.</p>
               </div>
               <div className="flex items-center gap-4">
                 <button className="flex items-center justify-center gap-2 rounded-lg h-11 px-5 bg-[#1172d4] text-white text-sm font-bold hover:bg-[#0f63b6]">
@@ -24,72 +24,72 @@ function Dashboard() {
               </div>
             </header>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-              <div className="bg-[#181C20] rounded-lg p-6">
-                <h2 className="text-white text-2xl font-bold mb-4">My Posts</h2>
+              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                <h2 className="text-gray-900 text-2xl font-bold mb-4">My Posts</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="border-b border-b-[#3b4754]">
-                        <th className="px-4 py-3 text-white text-sm font-medium">Title</th>
-                        <th className="px-4 py-3 text-white text-sm font-medium">Status</th>
-                        <th className="px-4 py-3 text-white text-sm font-medium text-right">Views</th>
+                      <tr className="border-b border-b-gray-200">
+                        <th className="px-4 py-3 text-gray-900 text-sm font-medium">Title</th>
+                        <th className="px-4 py-3 text-gray-900 text-sm font-medium">Status</th>
+                        <th className="px-4 py-3 text-gray-900 text-sm font-medium text-right">Views</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-b border-b-[#3b4754]">
-                        <td className="px-4 py-4 text-white">The Art of Storytelling</td>
+                      <tr className="border-b border-b-gray-200">
+                        <td className="px-4 py-4 text-gray-900">The Art of Storytelling</td>
                         <td className="px-4 py-4">
-                          <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-green-500/20 text-green-300">Published</span>
+                          <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Published</span>
                         </td>
-                        <td className="px-4 py-4 text-[#9dabb9] text-right">1200</td>
+                        <td className="px-4 py-4 text-gray-600 text-right">1200</td>
                       </tr>
-                      <tr className="border-b border-b-[#3b4754]">
-                        <td className="px-4 py-4 text-white">Crafting Compelling Characters</td>
+                      <tr className="border-b border-b-gray-200">
+                        <td className="px-4 py-4 text-gray-900">Crafting Compelling Characters</td>
                         <td className="px-4 py-4">
-                          <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-green-500/20 text-green-300">Published</span>
+                          <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Published</span>
                         </td>
-                        <td className="px-4 py-4 text-[#9dabb9] text-right">850</td>
+                        <td className="px-4 py-4 text-gray-600 text-right">850</td>
                       </tr>
                       <tr>
-                        <td className="px-4 py-4 text-white">Mastering Dialogue in Fiction</td>
+                        <td className="px-4 py-4 text-gray-900">Mastering Dialogue in Fiction</td>
                         <td className="px-4 py-4">
-                          <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-yellow-500/20 text-yellow-300">Draft</span>
+                          <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">Draft</span>
                         </td>
-                        <td className="px-4 py-4 text-[#9dabb9] text-right">0</td>
+                        <td className="px-4 py-4 text-gray-600 text-right">0</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
               </div>
-              <div className="bg-[#181C20] rounded-lg p-6">
-                <h2 className="text-white text-2xl font-bold mb-4">Drafts</h2>
+              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                <h2 className="text-gray-900 text-2xl font-bold mb-4">Drafts</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="border-b border-b-[#3b4754]">
-                        <th className="px-4 py-3 text-white text-sm font-medium">Title</th>
-                        <th className="px-4 py-3 text-white text-sm font-medium">Last Saved</th>
-                        <th className="px-4 py-3 text-white text-sm font-medium text-right">Actions</th>
+                      <tr className="border-b border-b-gray-200">
+                        <th className="px-4 py-3 text-gray-900 text-sm font-medium">Title</th>
+                        <th className="px-4 py-3 text-gray-900 text-sm font-medium">Last Saved</th>
+                        <th className="px-4 py-3 text-gray-900 text-sm font-medium text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-b border-b-[#3b4754]">
-                        <td className="px-4 py-4 text-white">Mastering Dialogue in Fiction</td>
-                        <td className="px-4 py-4 text-[#9dabb9]">2 hours ago</td>
+                      <tr className="border-b border-b-gray-200">
+                        <td className="px-4 py-4 text-gray-900">Mastering Dialogue in Fiction</td>
+                        <td className="px-4 py-4 text-gray-600">2 hours ago</td>
                         <td className="px-4 py-4 text-right">
                           <button className="text-[#1172d4] hover:text-[#0f63b6] font-medium">Edit</button>
                         </td>
                       </tr>
-                      <tr className="border-b border-b-[#3b4754]">
-                        <td className="px-4 py-4 text-white">The Power of Setting</td>
-                        <td className="px-4 py-4 text-[#9dabb9]">1 day ago</td>
+                      <tr className="border-b border-b-gray-200">
+                        <td className="px-4 py-4 text-gray-900">The Power of Setting</td>
+                        <td className="px-4 py-4 text-gray-600">1 day ago</td>
                         <td className="px-4 py-4 text-right">
                           <button className="text-[#1172d4] hover:text-[#0f63b6] font-medium">Edit</button>
                         </td>
                       </tr>
                       <tr>
-                        <td className="px-4 py-4 text-white">Editing Your Work</td>
-                        <td className="px-4 py-4 text-[#9dabb9]">3 days ago</td>
+                        <td className="px-4 py-4 text-gray-900">Editing Your Work</td>
+                        <td className="px-4 py-4 text-gray-600">3 days ago</td>
                         <td className="px-4 py-4 text-right">
                           <button className="text-[#1172d4] hover:text-[#0f63b6] font-medium">Edit</button>
                         </td>
@@ -100,11 +100,11 @@ function Dashboard() {
               </div>
             </div>
             <div>
-              <h2 className="text-white text-2xl font-bold mb-4">AI Writing Assistant</h2>
-              <div className="bg-[#181C20] rounded-lg p-6 flex items-center gap-8">
+              <h2 className="text-gray-900 text-2xl font-bold mb-4">AI Writing Assistant</h2>
+              <div className="bg-white border border-gray-200 rounded-lg p-6 flex items-center gap-8 shadow-sm">
                 <div className="flex-1">
-                  <h3 className="text-white text-xl font-bold">Unleash your creativity.</h3>
-                  <p className="text-[#9dabb9] text-base mt-2 mb-4">Get fresh ideas, outlines, and even full drafts for your next blog post with our AI-powered assistant.</p>
+                  <h3 className="text-gray-900 text-xl font-bold">Unleash your creativity.</h3>
+                  <p className="text-gray-600 text-base mt-2 mb-4">Get fresh ideas, outlines, and even full drafts for your next blog post with our AI-powered assistant.</p>
                   <button className="flex items-center justify-center gap-2 rounded-lg h-11 px-5 bg-[#1172d4] text-white text-sm font-bold hover:bg-[#0f63b6]">
                     <span className="material-symbols-outlined">auto_awesome</span>
                     <span className="truncate">Generate Ideas</span>
