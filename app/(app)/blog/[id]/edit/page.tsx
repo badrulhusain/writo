@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 interface Blog {
   id: string;
@@ -32,10 +33,21 @@ const EditBlogPost = () => {
         if (!response.ok) {
           throw new Error('Failed to fetch blog');
         }
-        const data = await response.json();
-        setBlog(data);
-        setTitle(data.title);
-        setContent(data.content);
+        
+        // Check if response has content before parsing JSON
+        const text = await response.text();
+        if (!text) {
+          throw new Error('Empty response from server');
+        }
+        
+        try {
+          const data = JSON.parse(text);
+          setBlog(data);
+          setTitle(data.title);
+          setContent(data.content);
+        } catch (parseError) {
+          throw new Error('Invalid JSON response from server');
+        }
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -63,28 +75,29 @@ const EditBlogPost = () => {
         throw new Error('Failed to update blog post');
       }
 
-      const data = await response.json();
-      setTitleError('');
-      setContentError('');
-      router.push(`/blog/${params.id}`);
+      // Check if response has content before parsing JSON
+      const text = await response.text();
+      if (!text) {
+        router.push(`/blog/${params.id}`);
+        return;
+      }
+      
+      try {
+        const data = JSON.parse(text);
+        setTitleError('');
+        setContentError('');
+        router.push(`/blog/${params.id}`);
+      } catch (parseError) {
+        throw new Error('Invalid JSON response from server');
+      }
     } catch (error: any) {
       setTitleError(error.message);
       setContentError(error.message);
     }
   };
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(e.target.value);
-    setTitleError('');
-  };
-
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setContent(e.target.value);
-    setContentError('');
-  };
-
   if (loading) {
-    return <div className="flex justify-center items-center h-64">Loading...</div>;
+    return <span className="loading loading-ring loading-xl"></span>;
   }
 
   if (error) {
@@ -96,44 +109,63 @@ const EditBlogPost = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto mt-8">
-      <div className="mb-4">
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-          Title
-        </label>
-        <input
-          type="text"
-          id="title"
-          value={title}
-          onChange={handleTitleChange}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          required
-        />
-        {titleError && <p className="mt-1 text-sm text-red-600">{titleError}</p>}
-      </div>
-      <div className="mb-4">
-        <label htmlFor="content" className="block text-sm font-medium text-gray-700">
-          Content
-        </label>
-        <textarea
-          id="content"
-          value={content}
-          onChange={handleContentChange}
-          rows={4}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          required
-        />
-        {contentError && <p className="mt-1 text-sm text-red-600">{contentError}</p>}
-      </div>
-      <div className="flex justify-center">
-        <button
-          type="submit"
-          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-        >
-          Update Blog
-        </button>
-      </div>
-    </form>
+    <div className="max-w-4xl mx-auto mt-8 p-6 bg-white shadow-md rounded-lg">
+      <h1 className="text-3xl font-bold mb-6">Edit Blog Post</h1>
+      <form onSubmit={handleSubmit}>
+        <div className="mb-4">
+          <label htmlFor="title" className="block text-gray-700 text-sm font-bold mb-2">
+            Title
+          </label>
+          <input
+            type="text"
+            id="title"
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              setTitleError('');
+            }}
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+              titleError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+            }`}
+            placeholder="Enter blog title"
+          />
+          {titleError && <p className="text-red-500 text-xs italic mt-2">{titleError}</p>}
+        </div>
+        <div className="mb-6">
+          <label htmlFor="content" className="block text-gray-700 text-sm font-bold mb-2">
+            Content
+          </label>
+          <textarea
+            id="content"
+            value={content}
+            onChange={(e) => {
+              setContent(e.target.value);
+              setContentError('');
+            }}
+            rows={10}
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+              contentError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+            }`}
+            placeholder="Enter blog content"
+          ></textarea>
+          {contentError && <p className="text-red-500 text-xs italic mt-2">{contentError}</p>}
+        </div>
+        <div className="flex items-center justify-between">
+          <button
+            type="submit"
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
+            Update Blog Post
+          </button>
+          <Link
+            href={`/blog/${blog.id}`}
+            className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
+          >
+            Cancel
+          </Link>
+        </div>
+      </form>
+    </div>
   );
 };
 

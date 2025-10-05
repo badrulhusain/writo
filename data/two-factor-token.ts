@@ -1,12 +1,11 @@
-import { db } from "@/lib/db";
+import { connectDB, TwoFactorToken } from "@/lib/db";
 
 export const getTwoFactorTokenByToken = async (token: string) => {
   try {
-    const twoFactorToken = await db.twoFactorToken.findUnique({
-      where: { token }
-    });
+    await connectDB();
+    const twoFactorToken = await TwoFactorToken.findOne({ token });
 
-    return twoFactorToken;
+    return twoFactorToken ? twoFactorToken.toObject() : null;
   } catch {
     return null;
   }
@@ -14,11 +13,10 @@ export const getTwoFactorTokenByToken = async (token: string) => {
 
 export const getTwoFactorTokenByEmail = async (email: string) => {
   try {
-    const twoFactorToken = await db.twoFactorToken.findFirst({
-      where: { email }
-    });
+    await connectDB();
+    const twoFactorToken = await TwoFactorToken.findOne({ email });
 
-    return twoFactorToken;
+    return twoFactorToken ? twoFactorToken.toObject() : null;
   } catch {
     return null;
   }

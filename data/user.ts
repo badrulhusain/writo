@@ -1,10 +1,18 @@
-import { db } from "@/lib/db";
+import { connectDB, User } from "@/lib/db";
 
 export const getUserByEmail = async (email: string) => {
   try {
-    const user = await db.user.findUnique({ where: { email } });
+    await connectDB();
+    const user = await User.findOne({ email });
 
-    return user;
+    if (!user) return null;
+    
+    const userData: any = user.toObject();
+    return {
+      ...userData,
+      id: user.id.toString(),
+      emailVerified: userData.emailVerified ? userData.emailVerified.toISOString() : null,
+    };
   } catch {
     return null;
   }
@@ -12,9 +20,17 @@ export const getUserByEmail = async (email: string) => {
 
 export const getUserById = async (id: string) => {
   try {
-    const user = await db.user.findUnique({ where: { id } });
+    await connectDB();
+    const user = await User.findById(id);
 
-    return user;
+    if (!user) return null;
+    
+    const userData: any = user.toObject();
+    return {
+      ...userData,
+      id: user.id.toString(),
+      emailVerified: userData.emailVerified ? userData.emailVerified.toISOString() : null,
+    };
   } catch {
     return null;
   }

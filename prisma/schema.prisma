@@ -1,7 +1,6 @@
 datasource db {
-  provider  = "postgresql"
+  provider  = "mongodb"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 generator client {
@@ -14,106 +13,122 @@ enum UserRole {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  role          UserRole @default(USER)
-  accounts      Account[]
-  isTwoFactorEnabled Boolean @default(false)
+  id                    String    @id @default(auto()) @map("_id") @db.ObjectId
+  name                  String?
+  email                 String?   @unique
+  emailVerified         DateTime?
+  image                 String?
+  password              String?
+  role                  UserRole @default(USER)
+  accounts              Account[]
+  isTwoFactorEnabled    Boolean @default(false)
   twoFactorConfirmation TwoFactorConfirmation?
-  blogs         Blog[]
+  blogs                 Blog[]
+
+  @@map("users")
 }
 
 model Blog {
-  id          String     @id @default(cuid())
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String
   content     String
-  authorId    String
-  categoryId  String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  authorId    String   @db.ObjectId
+  categoryId  String?  @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  author      User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  category    Category?  @relation(fields: [categoryId], references: [id])
-  tags        BlogTag[]  // many-to-many via join table
+  author   User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id])
+  tags     BlogTag[]
+
+  @@map("blogs")
+  @@index([authorId])
+  @@index([categoryId])
 }
 
 model Category {
-  id    String @id @default(cuid())
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
   name  String @unique
   blogs Blog[]
+
+  @@map("categories")
 }
 
 model Tag {
-  id    String    @id @default(cuid())
-  name  String    @unique
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  name  String @unique
   blogs BlogTag[]
+
+  @@map("tags")
 }
 
 model BlogTag {
-  blogId String
-  tagId  String
+  blogId String @db.ObjectId
+  tagId  String @db.ObjectId
 
   blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
   tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
-  @@id([blogId, tagId]) // composite key
+  @@id([blogId, tagId])
+  @@map("blog_tags")
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@map("accounts")
+  @@index([userId])
 }
 
 model VerificationToken {
-  id String @id @default(cuid())
-  email String
-  token String @unique
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  email   String
+  token   String   @unique
   expires DateTime
 
   @@unique([email, token])
+  @@map("verification_tokens")
 }
 
 model PasswordResetToken {
-  id String @id @default(cuid())
-  email String
-  token String @unique
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  email   String
+  token   String   @unique
   expires DateTime
 
   @@unique([email, token])
+  @@map("password_reset_tokens")
 }
 
 model TwoFactorToken {
-  id String @id @default(cuid())
-  email String
-  token String @unique
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  email   String
+  token   String   @unique
   expires DateTime
 
   @@unique([email, token])
+  @@map("two_factor_tokens")
 }
 
 model TwoFactorConfirmation {
-  id String @id @default(cuid())
-
-  userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId])
+  @@map("two_factor_confirmations")
 }

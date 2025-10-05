@@ -4,7 +4,7 @@ import * as z from "zod";
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 
-import { db } from "@/lib/db";
+import { connectDB, User } from "@/lib/db";
 import { RegisterSchema } from "@/schemas";
 import { getUserByEmail } from "@/data/user";
 import { sendVerificationEmail } from "@/lib/mail";
@@ -28,16 +28,16 @@ export const register = async (values: z.infer<typeof RegisterSchema>) => {
   // 3. Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // 4. Create user
+  // 4. Connect to database and create user
+  await connectDB();
   let newUser;
   try {
-    newUser = await db.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-      },
+    newUser = new User({
+      name,
+      email,
+      password: hashedPassword,
     });
+    await newUser.save();
   } catch (err) {
     console.error("Database error during user creation:", err);
     return { error: "Failed to create user" };

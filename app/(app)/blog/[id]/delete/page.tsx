@@ -30,8 +30,19 @@ const DeleteBlogPost = () => {
         if (!response.ok) {
           throw new Error('Failed to fetch blog');
         }
-        const data = await response.json();
-        setBlog(data);
+        
+        // Check if response has content before parsing JSON
+        const text = await response.text();
+        if (!text) {
+          throw new Error('Empty response from server');
+        }
+        
+        try {
+          const data = JSON.parse(text);
+          setBlog(data);
+        } catch (parseError) {
+          throw new Error('Invalid JSON response from server');
+        }
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -81,13 +92,14 @@ const DeleteBlogPost = () => {
 
   return (
     <div className="max-w-4xl mx-auto mt-8 p-6 bg-white shadow-md rounded-lg">
-      <h1 className="text-3xl font-bold mb-4 text-red-600">Delete Blog Post</h1>
-      <p className="text-gray-600 mb-4">
-        Are you sure you want to delete the following blog post? This action cannot be undone.
-      </p>
-      <div className="border p-4 rounded-md mb-6">
-        <h2 className="text-2xl font-semibold mb-2">{blog.title}</h2>
-        <p className="text-gray-600 mb-2">
+      <h1 className="text-3xl font-bold mb-6">Delete Blog Post</h1>
+      <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+        <p className="font-bold">Warning!</p>
+        <p>Are you sure you want to delete the following blog post? This action cannot be undone.</p>
+      </div>
+      <div className="mb-6 p-4 border rounded-lg">
+        <h2 className="text-2xl font-bold mb-2">{blog.title}</h2>
+        <p className="text-gray-600 mb-4">
           By {blog.author.name} on {new Date(blog.createdAt).toLocaleDateString()}
         </p>
         <div className="prose max-w-none">
@@ -100,13 +112,15 @@ const DeleteBlogPost = () => {
         <button
           onClick={handleDelete}
           disabled={deleting}
-          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50"
+          className={`px-4 py-2 text-white rounded ${
+            deleting ? 'bg-red-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'
+          }`}
         >
-          {deleting ? 'Deleting...' : 'Delete Blog'}
+          {deleting ? 'Deleting...' : 'Delete Blog Post'}
         </button>
         <Link
           href={`/blog/${blog.id}`}
-          className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
         >
           Cancel
         </Link>

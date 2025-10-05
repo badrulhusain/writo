@@ -1,12 +1,11 @@
-import { db } from "@/lib/db";
+import { connectDB, PasswordResetToken } from "@/lib/db";
 
 export const getPasswordResetTokenByToken = async (token: string) => {
   try {
-    const passwordResetToken = await db.passwordResetToken.findUnique({
-      where: { token }
-    });
+    await connectDB();
+    const passwordResetToken = await PasswordResetToken.findOne({ token });
 
-    return passwordResetToken;
+    return passwordResetToken ? passwordResetToken.toObject() : null;
   } catch {
     return null;
   }
@@ -14,11 +13,10 @@ export const getPasswordResetTokenByToken = async (token: string) => {
 
 export const getPasswordResetTokenByEmail = async (email: string) => {
   try {
-    const passwordResetToken = await db.passwordResetToken.findFirst({
-      where: { email }
-    });
+    await connectDB();
+    const passwordResetToken = await PasswordResetToken.findOne({ email });
 
-    return passwordResetToken;
+    return passwordResetToken ? passwordResetToken.toObject() : null;
   } catch {
     return null;
   }

@@ -1,12 +1,11 @@
-import { db } from "@/lib/db";
+import { connectDB, Account } from "@/lib/db";
 
 export const getAccountByUserId = async (userId: string) => {
   try {
-    const account = await db.account.findFirst({
-      where: { userId }
-    });
+    await connectDB();
+    const account = await Account.findOne({ userId });
 
-    return account;
+    return account ? account.toObject() : null;
   } catch {
     return null;
   }

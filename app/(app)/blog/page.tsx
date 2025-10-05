@@ -1,73 +1,214 @@
-'use client'
+"use client";
 
-import React, { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { TypingAnimation } from "@/components/ui/typing-animation";
-import { useCurrentUser } from '@/hooks/use-current-user';
-interface Blog {
-  id: string
-  title: string
-  content: string
-  createdAt: string
-  author: { name: string | null }
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Search,
+  Plus,
+  Calendar,
+  User,
+  Eye,
+  MessageCircle,
+  Heart,
+  Share2
+} from "lucide-react";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+
+interface BlogPost {
+  _id: string;
+  title: string;
+  content: string;
+  authorId: {
+    name: string;
+    email: string;
+  };
+  categoryId?: {
+    name: string;
+  };
+  tags: Array<{
+    name: string;
+  }>;
+  createdAt: string;
+  status: string;
+  likeCount?: number;
+  userLiked?: boolean;
 }
 
-function Blog() {
-  const [blogs, setBlogs] = useState<Blog[]>([])
-  const [loading, setLoading] = useState(true)
-  const user = useCurrentUser()
+export default function BlogPage() {
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    fetch('/api/blogs')
-      .then(res => res.json())
-      .then(data => {
-        setBlogs(data)
-        setLoading(false)
-      })
-      .catch(err => {
-        console.error(err)
-        setLoading(false)
-      })
-  }, [])
+    fetchBlogs();
+  }, []);
 
-  if (loading) return <div className="flex justify-center items-center min-h-screen"><TypingAnimation>LOADING...</TypingAnimation></div>
+  const fetchBlogs = async () => {
+    try {
+      const response = await fetch("/api/blogs");
+      if (response.ok) {
+        const blogs = await response.json();
+        // Fetch like data for each blog
+        const blogsWithLikes = await Promise.all(
+          blogs.map(async (blog: BlogPost) => {
+            try {
+              const likeResponse = await fetch(`/api/blogs/${blog._id}/like`);
+              if (likeResponse.ok) {
+                const likeData = await likeResponse.json();
+                return { ...blog, likeCount: likeData.likeCount, userLiked: likeData.userLiked };
+              }
+            } catch (error) {
+              console.error("Error fetching likes for blog:", blog._id, error);
+            }
+            return blog;
+          })
+        );
+        setBlogPosts(blogsWithLikes);
+      }
+    } catch (error) {
+      console.error("Error fetching blogs:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const handleLike = async (blogId: string) => {
+    try {
+      const response = await fetch(`/api/blogs/${blogId}/like`, {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // Update the local state
+        setBlogPosts(posts =>
+          posts.map(post =>
+            post._id === blogId
+              ? {
+                  ...post,
+                  userLiked: result.liked,
+                  likeCount: (post.likeCount || 0) + (result.liked ? 1 : -1)
+                }
+              : post
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error toggling like:", error);
+    }
+  };
+
+  const handleShare = async (blogId: string, title: string) => {
+    const url = `${window.location.origin}/blog/${blogId}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title,
+          url,
+        });
+      } catch (error) {
+        console.error("Error sharing:", error);
+        copyToClipboard(url);
+      }
+    } else {
+      copyToClipboard(url);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      alert("Link copied to clipboard!");
+    });
+  };
+
+  const filteredPosts = blogPosts.filter(post =>
+    post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    post.content.toLowerCase().includes(searchTerm.toLowerCase())
+  );
   return (
-    <div>
-      <header className="flex justify-between items-center mb-8">
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-gray-900 text-4xl font-bold">All Blogs</h1>
-          <p className="text-gray-600 text-base mt-1">Welcome back, {user?.name?.split(' ')[0] || 'User'}. Explore all published posts.</p>
+          <h1 className="text-3xl font-bold">My Blog Posts</h1>
+          <p className="text-muted-foreground">Manage and view all your published blog posts.</p>
         </div>
-        <div className="flex items-center gap-4">
-          <Link href={'/blog/create'} className="flex items-center justify-center gap-2 rounded-lg h-11 px-5 bg-[#1172d4] text-white text-sm font-bold hover:bg-[#0f63b6]" >
-            <span className="material-symbols-outlined">add_circle</span>
-            <span className="truncate" >Create New Post</span>
-          </Link>
+        <div className="flex flex-col sm:flex-row gap-2">
           <div className="relative">
-            <button className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-14 border-2 border-blue-500" style={{ backgroundImage: `url("${user?.image || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDMuFAcrexZnu-MnPc33xMsc_TgHughy31oOlB7PluORPRu3VUrPUpFWE74H9EjDfs2yIRFOeEo5RzyD0OrkPUpPyyUnJokv8JD5iJRKA1KeTGdQUdsiwEIW-1oiFW7NQigRO41QzDt53CHzwfcClIRSs8MYM6Dq70QX0OaBmEtbThHU1nq1Oc16BvkQHDoU8irFLAKvyqht4k5iKhD1g4EJn6X-z8XRVg1b7DQ0NAoow1PmDOkMjSsmxLpBlOFrxP6k3NhtlrY3ME'}"` }}></button>
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search posts..."
+              className="pl-8 md:w-[300px]"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
+          <Button asChild>
+            <Link href="/blog/create">
+              <Plus className="mr-2 h-4 w-4" />
+              New Post
+            </Link>
+          </Button>
         </div>
-      </header>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {blogs.map(blog => (
-          <Link key={blog.id} href={`/blog/${blog.id}`}>
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle>{blog.title}</CardTitle>
-                <CardDescription>By {blog.author.name || 'Anonymous'} on {new Date(blog.createdAt).toLocaleDateString()}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>{blog.content.substring(0, 100)}...</p>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
       </div>
-    
-    </div>
-  )
-}
 
-export default Blog
+      {loading ? (
+        <div className="text-center py-8">Loading blogs...</div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredPosts.map((post) => (
+            <Card key={post._id} className="flex flex-col">
+              <CardHeader>
+                <CardTitle>{post.title}</CardTitle>
+                <CardDescription className="line-clamp-2">
+                  {post.content.substring(0, 150)}...
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1">
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <User className="mr-1 h-4 w-4" />
+                  {post.authorId.name}
+                </div>
+                <div className="flex items-center text-sm text-muted-foreground mt-1">
+                  <Calendar className="mr-1 h-4 w-4" />
+                  {new Date(post.createdAt).toLocaleDateString()}
+                </div>
+                {post.categoryId && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Category: {post.categoryId.name}
+                  </div>
+                )}
+              </CardContent>
+              <CardFooter className="flex justify-between items-center">
+                <div className="flex items-center space-x-3 text-sm text-muted-foreground">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleLike(post._id)}
+                    className={`p-1 h-8 ${post.userLiked ? 'text-red-500' : ''}`}
+                  >
+                    <Heart className={`mr-1 h-4 w-4 ${post.userLiked ? 'fill-current' : ''}`} />
+                    {post.likeCount || 0}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleShare(post._id, post.title)}
+                    className="p-1 h-8"
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/blog/${post._id}`}>View</Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

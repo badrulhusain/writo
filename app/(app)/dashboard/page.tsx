@@ -1,125 +1,325 @@
 "use client";
 
-import React from 'react';
-import { useCurrentUser } from '@/hooks/use-current-user';
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { 
+  FileText, 
+  Users, 
+  TrendingUp, 
+  Calendar,
+  Plus,
+  BarChart3,
+  Eye,
+  MessageCircle,
+  Heart,
+  Search,
+  Filter
+} from "lucide-react";
+import Link from "next/link";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
-function Dashboard() {
-  const user = useCurrentUser();
+// Mock data for demonstration
+const mockBlogs = [
+  {
+    id: 1,
+    title: "Getting Started with Next.js 15",
+    excerpt: "Learn how to build modern web applications with the latest features of Next.js 15...",
+    author: "Alex Johnson",
+    date: "2023-06-15",
+    views: 1240,
+    comments: 24,
+    likes: 56,
+    category: "Technology",
+    tags: ["Next.js", "React", "Web Development"],
+    status: "Published",
+    aiInsights: {
+      seoScore: 85,
+      readability: "Good",
+      suggestions: 3
+    }
+  },
+  {
+    id: 2,
+    title: "10 Tips for Better UI Design",
+    excerpt: "Discover essential principles that will help you create more intuitive and engaging user interfaces...",
+    author: "Sarah Williams",
+    date: "2023-06-10",
+    views: 980,
+    comments: 18,
+    likes: 42,
+    category: "Design",
+    tags: ["UI", "UX", "Design Principles"],
+    status: "Published",
+    aiInsights: {
+      seoScore: 92,
+      readability: "Excellent",
+      suggestions: 1
+    }
+  },
+  {
+    id: 3,
+    title: "Building a Blog with React",
+    excerpt: "A step-by-step guide to creating your own blog platform using React and modern web technologies...",
+    author: "Michael Chen",
+    date: "2023-06-05",
+    views: 1520,
+    comments: 32,
+    likes: 78,
+    category: "Tutorial",
+    tags: ["React", "JavaScript", "Tutorial"],
+    status: "Draft",
+    aiInsights: {
+      seoScore: 78,
+      readability: "Good",
+      suggestions: 5
+    }
+  },
+];
+
+const mockStats = {
+  totalPosts: 24,
+  pageViews: 1248,
+  comments: 86,
+  engagement: 68,
+  topCategory: "Technology"
+};
+
+export default function DashboardPage() {
+  const [blogs, setBlogs] = useState(mockBlogs);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredBlogs, setFilteredBlogs] = useState(mockBlogs);
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+
+  // Filter blogs based on search term, category, and status
+  useEffect(() => {
+    let result = blogs;
+    
+    if (searchTerm) {
+      result = result.filter(blog => 
+        blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        blog.excerpt.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    if (categoryFilter !== "All") {
+      result = result.filter(blog => blog.category === categoryFilter);
+    }
+    
+    if (statusFilter !== "All") {
+      result = result.filter(blog => blog.status === statusFilter);
+    }
+    
+    setFilteredBlogs(result);
+  }, [searchTerm, categoryFilter, statusFilter, blogs]);
+
+  // Get unique categories for filter dropdown
+  const categories = ["All", ...new Set(blogs.map(blog => blog.category))];
+  const statuses = ["All", "Published", "Draft"];
 
   return (
-    <div>
-            <header className="flex justify-between items-center mb-8">
-              <div>
-                <h1 className="text-gray-900 text-4xl font-bold">My Posts</h1>
-                <p className="text-gray-600 text-base mt-1">Welcome back, {user?.name?.split(' ')[0] || 'Sophia'}. Your creative hub awaits.</p>
-              </div>
-              <div className="flex items-center gap-4">
-                <button className="flex items-center justify-center gap-2 rounded-lg h-11 px-5 bg-[#1172d4] text-white text-sm font-bold hover:bg-[#0f63b6]">
-                  <span className="material-symbols-outlined">add_circle</span>
-                  <span className="truncate">Create New Post</span>
-                </button>
-                <div className="relative">
-                  <button className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-14 border-2 border-blue-500" style={{ backgroundImage: `url("${user?.image || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDMuFAcrexZnu-MnPc33xMsc_TgHughy31oOlB7PluORPRu3VUrPUpFWE74H9EjDfs2yIRFOeEo5RzyD0OrkPUpPyyUnJokv8JD5iJRKA1KeTGdQUdsiwEIW-1oiFW7NQigRO41QzDt53CHzwfcClIRSs8MYM6Dq70QX0OaBmEtbThHU1nq1Oc16BvkQHDoU8irFLAKvyqht4k5iKhD1g4EJn6X-z8XRVg1b7DQ0NAoow1PmDOkMjSsmxLpBlOFrxP6k3NhtlrY3ME'}"` }}></button>
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground">Welcome back! Here's what's happening with your blog.</p>
+        </div>
+        <Button asChild>
+          <Link href="/blog/create">
+            <Plus className="mr-2 h-4 w-4" />
+            New Post
+          </Link>
+        </Button>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{mockStats.totalPosts}</div>
+            <p className="text-xs text-muted-foreground">+2 from last month</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Page Views</CardTitle>
+            <Eye className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{mockStats.pageViews}</div>
+            <p className="text-xs text-muted-foreground">+12% from last month</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Comments</CardTitle>
+            <MessageCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{mockStats.comments}</div>
+            <p className="text-xs text-muted-foreground">+8% from last month</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Engagement</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{mockStats.engagement}%</div>
+            <p className="text-xs text-muted-foreground">+4% from last month</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search posts..."
+            className="pl-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                {categoryFilter}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>Filter by Category</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {categories.map((category) => (
+                <DropdownMenuItem 
+                  key={category} 
+                  onClick={() => setCategoryFilter(category)}
+                >
+                  {category}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                {statusFilter}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {statuses.map((status) => (
+                <DropdownMenuItem 
+                  key={status} 
+                  onClick={() => setStatusFilter(status)}
+                >
+                  {status}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Blog List */}
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Posts</CardTitle>
+            <CardDescription>Manage and view all your blog posts</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {filteredBlogs.map((blog) => (
+                <div key={blog.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="flex-1">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-1">
+                        <h3 className="font-semibold">{blog.title}</h3>
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{blog.excerpt}</p>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <Badge variant="secondary">{blog.category}</Badge>
+                          {blog.tags.map((tag) => (
+                            <Badge key={tag} variant="outline">{tag}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <Badge 
+                          variant={blog.status === "Published" ? "default" : "secondary"}
+                        >
+                          {blog.status}
+                        </Badge>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Eye className="h-4 w-4" />
+                            {blog.views}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <MessageCircle className="h-4 w-4" />
+                            {blog.comments}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Heart className="h-4 w-4" />
+                            {blog.likes}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* AI Insights */}
+                    <div className="mt-3 p-3 bg-secondary/50 rounded-md">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">AI Insights</span>
+                        <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded">
+                          SEO Score: {blog.aiInsights.seoScore}/100
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 mt-2 text-sm">
+                        <span>Readability: {blog.aiInsights.readability}</span>
+                        <span>{blog.aiInsights.suggestions} AI suggestions</span>
+                        <Button variant="link" size="sm" className="p-0 h-auto">
+                          View suggestions
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2 mt-4 md:mt-0">
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/blog/${blog.id}/edit`}>Edit</Link>
+                    </Button>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/blog/${blog.id}`}>View</Link>
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </header>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                <h2 className="text-gray-900 text-2xl font-bold mb-4">My Posts</h2>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="border-b border-b-gray-200">
-                        <th className="px-4 py-3 text-gray-900 text-sm font-medium">Title</th>
-                        <th className="px-4 py-3 text-gray-900 text-sm font-medium">Status</th>
-                        <th className="px-4 py-3 text-gray-900 text-sm font-medium text-right">Views</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b border-b-gray-200">
-                        <td className="px-4 py-4 text-gray-900">The Art of Storytelling</td>
-                        <td className="px-4 py-4">
-                          <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Published</span>
-                        </td>
-                        <td className="px-4 py-4 text-gray-600 text-right">1200</td>
-                      </tr>
-                      <tr className="border-b border-b-gray-200">
-                        <td className="px-4 py-4 text-gray-900">Crafting Compelling Characters</td>
-                        <td className="px-4 py-4">
-                          <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Published</span>
-                        </td>
-                        <td className="px-4 py-4 text-gray-600 text-right">850</td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-4 text-gray-900">Mastering Dialogue in Fiction</td>
-                        <td className="px-4 py-4">
-                          <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">Draft</span>
-                        </td>
-                        <td className="px-4 py-4 text-gray-600 text-right">0</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                <h2 className="text-gray-900 text-2xl font-bold mb-4">Drafts</h2>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="border-b border-b-gray-200">
-                        <th className="px-4 py-3 text-gray-900 text-sm font-medium">Title</th>
-                        <th className="px-4 py-3 text-gray-900 text-sm font-medium">Last Saved</th>
-                        <th className="px-4 py-3 text-gray-900 text-sm font-medium text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b border-b-gray-200">
-                        <td className="px-4 py-4 text-gray-900">Mastering Dialogue in Fiction</td>
-                        <td className="px-4 py-4 text-gray-600">2 hours ago</td>
-                        <td className="px-4 py-4 text-right">
-                          <button className="text-[#1172d4] hover:text-[#0f63b6] font-medium">Edit</button>
-                        </td>
-                      </tr>
-                      <tr className="border-b border-b-gray-200">
-                        <td className="px-4 py-4 text-gray-900">The Power of Setting</td>
-                        <td className="px-4 py-4 text-gray-600">1 day ago</td>
-                        <td className="px-4 py-4 text-right">
-                          <button className="text-[#1172d4] hover:text-[#0f63b6] font-medium">Edit</button>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-4 text-gray-900">Editing Your Work</td>
-                        <td className="px-4 py-4 text-gray-600">3 days ago</td>
-                        <td className="px-4 py-4 text-right">
-                          <button className="text-[#1172d4] hover:text-[#0f63b6] font-medium">Edit</button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              ))}
             </div>
-            <div>
-              <h2 className="text-gray-900 text-2xl font-bold mb-4">AI Writing Assistant</h2>
-              <div className="bg-white border border-gray-200 rounded-lg p-6 flex items-center gap-8 shadow-sm">
-                <div className="flex-1">
-                  <h3 className="text-gray-900 text-xl font-bold">Unleash your creativity.</h3>
-                  <p className="text-gray-600 text-base mt-2 mb-4">Get fresh ideas, outlines, and even full drafts for your next blog post with our AI-powered assistant.</p>
-                  <button className="flex items-center justify-center gap-2 rounded-lg h-11 px-5 bg-[#1172d4] text-white text-sm font-bold hover:bg-[#0f63b6]">
-                    <span className="material-symbols-outlined">auto_awesome</span>
-                    <span className="truncate">Generate Ideas</span>
-                  </button>
-                </div>
-                <div className="flex-shrink-0">
-                  <div
-                    className="w-64 h-40 bg-center bg-no-repeat bg-cover rounded-lg"
-                    style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAlMM0zIOlW_9R-sbJNJYnsl4CG5FHjNQmMXAiRqrPUiDF5aHHLR8doGBsmqUz2jZleW57v_UZbL8lbhF6q53JWyLERohxTR_15C0LwbEWpMYaUi3BPw9PR-YK3O4AVasFraKh9CqR_86poHu0clNzsmDrQ2OXkAV9axKe16Ti4zZIcONDMX-WVcYp5ZFD5NvUMKYcjTYjYP1tXSEs8u_KwrCRK0ycxuCjfEY8Vl9WEF-D-oeh8BohG9W_P4Apcv5xzE1nzVN0GaSw")' }}
-                  ></div>
-                </div>
-              </div>
-            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
-
-export default Dashboard;

@@ -4,7 +4,7 @@ import * as z from "zod";
 import bcrypt from "bcryptjs";
 
 import { update } from "@/Auth";
-import { db } from "@/lib/db";
+import { connectDB, User } from "@/lib/db";
 import { SettingsSchema } from "@/schemas";
 import { getUserByEmail, getUserById } from "@/data/user";
 import { currentUser } from "@/lib/auth";
@@ -69,21 +69,28 @@ export const settings = async (
     values.newPassword = undefined;
   }
 
-  const updatedUser = await db.user.update({
-    where: { id: dbUser.id },
-    data: {
+  // Connect to database
+  await connectDB();
+  
+  // Update user
+  const updatedUser = await User.findByIdAndUpdate(
+    dbUser.id,
+    {
       ...values,
-    }
-  });
+    },
+    { new: true }
+  );
 
-  update({
-    user: {
-      name: updatedUser.name,
-      email: updatedUser.email,
-      isTwoFactorEnabled: updatedUser.isTwoFactorEnabled,
-      role: updatedUser.role,
-    }
-  });
+  if (updatedUser) {
+    update({
+      user: {
+        name: updatedUser.name,
+        email: updatedUser.email,
+        isTwoFactorEnabled: updatedUser.isTwoFactorEnabled,
+        role: updatedUser.role,
+      }
+    });
+  }
 
   return { success: "Settings Updated!" }
 }

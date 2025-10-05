@@ -3,7 +3,7 @@
 import * as z from "zod";
 import { AuthError } from "next-auth";
 
-import { db } from "@/lib/db";
+import { connectDB, User, TwoFactorToken, TwoFactorConfirmation } from "@/lib/db";
 import { signIn } from "@/Auth";
 import { LoginSchema } from "@/schemas";
 import { getUserByEmail } from "@/data/user";
@@ -39,8 +39,6 @@ export const login = async (
     return { error: "Email does not exist!" }
   }
 
-
-
   if (existingUser.isTwoFactorEnabled && existingUser.email) {
     if (code) {
       const twoFactorToken = await getTwoFactorTokenByEmail(
@@ -61,24 +59,23 @@ export const login = async (
         return { error: "Code expired!" };
       }
 
-      await db.twoFactorToken.delete({
-        where: { id: twoFactorToken.id }
-      });
+      // Connect to database
+      await connectDB();
+      
+      // Delete the two factor token
+      await TwoFactorToken.deleteOne({ email: existingUser.email });
 
       const existingConfirmation = await getTwoFactorConfirmationByUserId(
         existingUser.id
       );
 
       if (existingConfirmation) {
-        await db.twoFactorConfirmation.delete({
-          where: { id: existingConfirmation.id }
-        });
+        await TwoFactorConfirmation.deleteOne({ userId: existingUser.id });
       }
 
-      await db.twoFactorConfirmation.create({
-        data: {
-          userId: existingUser.id,
-        }
+      // Create new two factor confirmation
+      await TwoFactorConfirmation.create({
+        userId: existingUser.id,
       });
     } else {
       const twoFactorToken = await generateTwoFactorToken(existingUser.email)

@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
 
-import { db } from "@/lib/db";
+import { connectDB, TwoFactorToken, PasswordResetToken, VerificationToken } from "@/lib/db";
 import { getVerificationTokenByEmail } from "@/data/verificiation-token";
 import { getPasswordResetTokenByEmail } from "@/data/password-reset-token";
 import { getTwoFactorTokenByEmail } from "@/data/two-factor-token";
@@ -13,22 +13,19 @@ export const generateTwoFactorToken = async (email: string) => {
   const existingToken = await getTwoFactorTokenByEmail(email);
 
   if (existingToken) {
-    await db.twoFactorToken.delete({
-      where: {
-        id: existingToken.id,
-      }
-    });
+    await connectDB();
+    await TwoFactorToken.deleteOne({ _id: existingToken._id });
   }
 
-  const twoFactorToken = await db.twoFactorToken.create({
-    data: {
-      email,
-      token,
-      expires,
-    }
+  await connectDB();
+  const twoFactorToken = new TwoFactorToken({
+    email,
+    token,
+    expires,
   });
+  await twoFactorToken.save();
 
-  return twoFactorToken;
+  return twoFactorToken.toObject();
 }
 
 export const generatePasswordResetToken = async (email: string) => {
@@ -38,20 +35,19 @@ export const generatePasswordResetToken = async (email: string) => {
   const existingToken = await getPasswordResetTokenByEmail(email);
 
   if (existingToken) {
-    await db.passwordResetToken.delete({
-      where: { id: existingToken.id }
-    });
+    await connectDB();
+    await PasswordResetToken.deleteOne({ _id: existingToken._id });
   }
 
-  const passwordResetToken = await db.passwordResetToken.create({
-    data: {
-      email,
-      token,
-      expires
-    }
+  await connectDB();
+  const passwordResetToken = new PasswordResetToken({
+    email,
+    token,
+    expires
   });
+  await passwordResetToken.save();
 
-  return passwordResetToken;
+  return passwordResetToken.toObject();
 }
 
 export const generateVerificationToken = async (email: string) => {
@@ -61,20 +57,17 @@ export const generateVerificationToken = async (email: string) => {
   const existingToken = await getVerificationTokenByEmail(email);
 
   if (existingToken) {
-    await db.verificationToken.delete({
-      where: {
-        id: existingToken.id,
-      },
-    });
+    await connectDB();
+    await VerificationToken.deleteOne({ _id: existingToken._id });
   }
 
-  const verficationToken = await db.verificationToken.create({
-    data: {
-      email,
-      token,
-      expires,
-    }
+  await connectDB();
+  const verificationToken = new VerificationToken({
+    email,
+    token,
+    expires,
   });
+  await verificationToken.save();
 
-  return verficationToken;
+  return verificationToken.toObject();
 };

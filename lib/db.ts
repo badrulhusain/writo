@@ -1,9 +1,38 @@
-import { PrismaClient } from "@prisma/client";
+import { connectToDatabase, mongoose } from './mongodb';
+import { User, Blog, Category, Tag, BlogTag, Like, Account, VerificationToken, PasswordResetToken, TwoFactorToken, TwoFactorConfirmation } from '@/models';
 
-declare global {
-  var prisma: PrismaClient | undefined;
+// Connect to the database
+let isConnected = false;
+
+export async function connectDB() {
+  if (isConnected) {
+    return;
+  }
+  
+  try {
+    await connectToDatabase();
+    isConnected = true;
+    console.log('Connected to MongoDB');
+  } catch (error) {
+    console.error('Failed to connect to MongoDB:', error);
+    throw error;
+  }
 }
 
-export const db = globalThis.prisma || new PrismaClient();
+// Export models for use in other files
+export {
+  User,
+  Blog,
+  Category,
+  Tag,
+  BlogTag,
+  Like,
+  Account,
+  VerificationToken,
+  PasswordResetToken,
+  TwoFactorToken,
+  TwoFactorConfirmation
+};
 
-if (process.env.NODE_ENV !== "development") globalThis.prisma = db;
+// Export mongoose for direct use if needed
+export { mongoose };

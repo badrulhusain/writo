@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarIcon, HomeIcon, MailIcon, PencilIcon } from "lucide-react";
+import { CalendarIcon, HomeIcon, PencilIcon } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
@@ -14,13 +14,13 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { Dock, DockIcon } from "@/components/ui/dock";
+import { AdvancedThemeToggle } from "@/components/advanced-theme-toggle";
 
 export type IconProps = React.HTMLAttributes<SVGElement>;
 
 const Icons = {
   calendar: (props: IconProps) => <CalendarIcon {...props} />,
-  email: (props: IconProps) => <MailIcon {...props} />,
-  linkedin: (props: IconProps) => (
+  email: (props: IconProps) => (
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
       <title>LinkedIn</title>
       <path
@@ -76,17 +76,17 @@ const DATA = {
       LinkedIn: {
         name: "LinkedIn",
         url: "#",
-        icon: Icons.linkedin,
+        icon: Icons.email,
       },
       X: {
         name: "X",
         url: "#",
         icon: Icons.x,
       },
-      email: {
-        name: "Send Email",
+      YouTube: {
+        name: "YouTube",
         url: "#",
-        icon: Icons.email,
+        icon: Icons.youtube,
       },
     },
   },
@@ -94,13 +94,30 @@ const DATA = {
 
 export function DockDemo() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <div className=" w-full items-center  flex justify-center">
-      <span className="pointer-events-none whitespace-pre-wrap bg-gradient-to-b from-black to-gray-300/80 bg-clip-text text-center text-8xl font-semibold leading-none text-transparent dark:from-white dark:to-slate-900/10">
-        WRITO
-      </span></div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-background to-secondary/10 dark:from-background dark:to-secondary/20">
+      <div className="w-full items-center flex justify-center mb-12">
+        <span className="pointer-events-none whitespace-pre-wrap bg-gradient-to-b from-primary to-primary/70 bg-clip-text text-center text-6xl md:text-8xl font-bold leading-none text-transparent">
+          WRITO
+        </span>
+      </div>
+      <p className="text-lg md:text-xl text-muted-foreground max-w-md md:max-w-xl text-center mb-16 px-4">
+        Unlock Your Blogging Potential with AI
+      </p>
       <TooltipProvider>
-        <Dock direction="middle" className="fixed bottom-4 left-1/2 transform -translate-x-1/2">
+        <Dock direction="middle" className="fixed bottom-8 left-1/2 transform -translate-x-1/2">
+          <DockIcon>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-12 rounded-full")}>
+                  <AdvancedThemeToggle />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Toggle Theme</p>
+              </TooltipContent>
+            </Tooltip>
+          </DockIcon>
+          <Separator orientation="vertical" className="h-full" />
           {DATA.navbar.map((item) => (
             <DockIcon key={item.label}>
               <Tooltip>
@@ -132,7 +149,7 @@ export function DockDemo() {
                     aria-label={social.name}
                     className={cn(
                       buttonVariants({ variant: "ghost", size: "icon" }),
-                      "size-12 rounded-full ",
+                      "size-12 rounded-full",
                     )}
                   >
                     <social.icon className="size-4" />

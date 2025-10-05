@@ -1,91 +1,277 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Save,
+  RotateCcw
+} from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { AITools } from "@/components/ai-tools";
 
-const CreateBlogPost = () => {
-    const router = useRouter();
-    const [title, setTitle] = useState('');
-    const [content, setContent] = useState('');
-    const [titleError, setTitleError] = useState('');
-    const [contentError, setContentError] = useState('');
+export default function CreateBlogPage() {
+  const router = useRouter();
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [category, setCategory] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState("");
+  const [publishImmediately, setPublishImmediately] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            const response = await fetch('/api/blogs', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ title, content }),
-            });
+  const handleAddTag = (tag: string) => {
+    if (!tags.includes(tag)) {
+      setTags([...tags, tag]);
+    }
+  };
 
-            if (!response.ok) {
-                throw new Error('Failed to create blog post');
-            }
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
+  };
 
-            const data = await response.json();
-            setTitleError('');
-            setContentError('');
-            router.push('/blog');
-            // Optionally, redirect or show success message
-        } catch (error: any) {
-            setTitleError(error.message);
-            setContentError(error.message);
-        }
-    };
+  const handleAddNewTag = () => {
+    if (newTag && !tags.includes(newTag)) {
+      setTags([...tags, newTag]);
+      setNewTag("");
+    }
+  };
 
-    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setTitle(e.target.value);
-        setTitleError('');
-    };
+  const handleSaveDraft = async () => {
+    if (!title.trim() || !content.trim()) {
+      alert("Title and content are required");
+      return;
+    }
 
-    const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setContent(e.target.value);
-        setContentError('');
-    };
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/blogs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: title.trim(),
+          content: content.trim(),
+          category: category || undefined,
+          tags,
+          publishImmediately: false,
+        }),
+      });
 
-    return (
-        <form onSubmit={handleSubmit} className="max-w-md mx-auto mt-8">
-            <div className="mb-4">
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                    Title
-                </label>
-                <input
-                    type="text"
-                    id="title"
-                    value={title}
-                    onChange={handleTitleChange}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                    required
+      if (response.ok) {
+        const blog = await response.json();
+        console.log("Draft saved:", blog);
+        router.push("/blog"); // Redirect to blog list
+      } else {
+        const error = await response.json();
+        console.error("Error saving draft:", error);
+        alert("Error saving draft: " + error.error);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      // TODO: Show error message
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!title.trim() || !content.trim()) {
+      alert("Title and content are required");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/blogs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: title.trim(),
+          content: content.trim(),
+          category: category || undefined,
+          tags,
+          publishImmediately: true,
+        }),
+      });
+
+      if (response.ok) {
+        const blog = await response.json();
+        console.log("Blog published:", blog);
+        router.push("/blog"); // Redirect to blog list
+      } else {
+        const error = await response.json();
+        console.error("Error publishing blog:", error);
+        alert("Error publishing blog: " + error.error);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      // TODO: Show error message
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Create New Blog Post</h1>
+        <p className="text-muted-foreground">Write and publish your blog post with AI assistance</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Main Content Editor */}
+        <div className="lg:col-span-3 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Blog Content</CardTitle>
+              <CardDescription>Write your blog post content below</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="title">Title</Label>
+                <Input 
+                  id="title" 
+                  value={title} 
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Your blog post title"
                 />
-                {titleError && <p className="mt-1 text-sm text-red-600">{titleError}</p>}
-            </div>
-            <div className="mb-4">
-                <label htmlFor="content" className="block text-sm font-medium text-gray-700">
-                    Content
-                </label>
-                <textarea
-                    id="content"
-                    value={content}
-                    onChange={handleContentChange}
-                    rows={4}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                    required
-                />
-                {contentError && <p className="mt-1 text-sm text-red-600">{contentError}</p>}
-            </div>
-            <div className="flex justify-center">
-                <button
-                    type="submit"
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                    Submit
-                </button>
-            </div>
-        </form>
-    );
-};
+              </div>
 
-export default CreateBlogPost;
+              <div className="space-y-2">
+                <Label htmlFor="content">Content</Label>
+                <Textarea
+                  id="content"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Write your blog post content here..."
+                  className="min-h-[400px]"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Publish Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Publish Settings</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="technology">Technology</SelectItem>
+                    <SelectItem value="design">Design</SelectItem>
+                    <SelectItem value="business">Business</SelectItem>
+                    <SelectItem value="lifestyle">Lifestyle</SelectItem>
+                    <SelectItem value="tutorial">Tutorial</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between">
+                 <Label htmlFor="publish">Publish immediately</Label>
+                 <Switch
+                   id="publish"
+                   checked={publishImmediately}
+                   onCheckedChange={setPublishImmediately}
+                 />
+               </div>
+
+              <div className="flex gap-2">
+                 <Button
+                   variant="outline"
+                   onClick={handleSaveDraft}
+                   className="flex-1"
+                   disabled={isLoading}
+                 >
+                   <RotateCcw className="h-4 w-4 mr-2" />
+                   {isLoading ? "Saving..." : "Save Draft"}
+                 </Button>
+                 <Button
+                   onClick={handlePublish}
+                   className="flex-1"
+                   disabled={isLoading}
+                 >
+                   <Save className="h-4 w-4 mr-2" />
+                   {isLoading ? "Publishing..." : "Publish"}
+                 </Button>
+               </div>
+            </CardContent>
+          </Card>
+
+          {/* Tags */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Tags</CardTitle>
+              <CardDescription>Add tags to categorize your post</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input 
+                  value={newTag} 
+                  onChange={(e) => setNewTag(e.target.value)}
+                  placeholder="Add a tag"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleAddNewTag();
+                    }
+                  }}
+                />
+                <Button onClick={handleAddNewTag}>Add</Button>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {tags.map((tag) => (
+                  <Badge 
+                    key={tag} 
+                    variant="secondary" 
+                    className="flex items-center gap-1"
+                  >
+                    {tag}
+                    <button 
+                      onClick={() => handleRemoveTag(tag)}
+                      className="ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5"
+                    >
+                      ×
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* AI Tools */}
+          <AITools 
+            content={content} 
+            onContentChange={setContent} 
+            title={title} 
+            onTitleChange={setTitle} 
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
