@@ -19,7 +19,7 @@ export const settings = async (
     return { error: "Unauthorized" }
   }
 
-  const dbUser = await getUserById(user.id);
+  const dbUser = await getUserById(user.id!);
 
   if (!dbUser) {
     return { error: "Unauthorized" }
@@ -70,8 +70,9 @@ export const settings = async (
 
   // Connect to database
   await connectDB();
-  
+
   // Update user
+  // @ts-ignore
   const updatedUser = await User.findByIdAndUpdate(
     dbUser.id,
     {
