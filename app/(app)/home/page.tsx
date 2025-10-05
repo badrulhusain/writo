@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  Search, 
-  Calendar, 
-  Eye, 
-  MessageCircle, 
+import {
+  Search,
+  Calendar,
+  Eye,
+  MessageCircle,
   Heart,
   Sparkles,
   TrendingUp,
@@ -18,132 +18,159 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-// Mock data for blog posts
-const blogPosts = [
-  {
-    id: 1,
-    title: "Building AI-Powered Blog Platforms with Next.js",
-    excerpt: "Learn how to integrate AI tools into blog platforms to enhance content creation and user engagement...",
-    author: {
-      name: "Alex Johnson",
-      avatar: "https://github.com/shadcn.png"
-    },
-    date: "June 15, 2023",
-    readTime: "8 min read",
-    views: 1240,
-    comments: 24,
-    likes: 56,
-    category: "Technology",
-    tags: ["AI", "Next.js", "Web Development"],
-    featured: true
-  },
-  {
-    id: 2,
-    title: "10 Tips for Better UI Design",
-    excerpt: "Discover essential principles that will help you create more intuitive and engaging user interfaces...",
-    author: {
-      name: "Sarah Williams",
-      avatar: "https://i.pravatar.cc/150?img=2"
-    },
-    date: "June 10, 2023",
-    readTime: "5 min read",
-    views: 980,
-    comments: 18,
-    likes: 42,
-    category: "Design",
-    tags: ["UI", "UX", "Design Principles"],
-    featured: false
-  },
-  {
-    id: 3,
-    title: "Building a Blog with React",
-    excerpt: "A step-by-step guide to creating your own blog platform using React and modern web technologies...",
-    author: {
-      name: "Michael Chen",
-      avatar: "https://i.pravatar.cc/150?img=3"
-    },
-    date: "June 5, 2023",
-    readTime: "12 min read",
-    views: 1520,
-    comments: 32,
-    likes: 78,
-    category: "Tutorial",
-    tags: ["React", "JavaScript", "Tutorial"],
-    featured: false
-  },
-  {
-    id: 4,
-    title: "Understanding Tailwind CSS",
-    excerpt: "Explore the utility-first approach to styling and how it can speed up your development workflow...",
-    author: {
-      name: "Emma Davis",
-      avatar: "https://i.pravatar.cc/150?img=4"
-    },
-    date: "May 28, 2023",
-    readTime: "6 min read",
-    views: 870,
-    comments: 15,
-    likes: 38,
-    category: "CSS",
-    tags: ["Tailwind", "CSS", "Styling"],
-    featured: false
-  },
-];
+interface BlogPost {
+  _id: string;
+  title: string;
+  content: string;
+  authorId: {
+    name: string;
+    email: string;
+  };
+  categoryId?: {
+    name: string;
+  };
+  tags: Array<{
+    name: string;
+  }>;
+  createdAt: string;
+  status: string;
+  likeCount?: number;
+}
 
-const categories = [
-  { name: "Technology", count: 12 },
-  { name: "Design", count: 8 },
-  { name: "Business", count: 5 },
-  { name: "Lifestyle", count: 7 },
-  { name: "Tutorial", count: 15 },
-];
+interface Category {
+  name: string;
+  count: number;
+}
 
-const trendingTags = [
-  "AI", "Next.js", "React", "JavaScript", "Web Development", "UI/UX", "CSS", "Tailwind"
-];
+interface Tag {
+  name: string;
+  count: number;
+}
+
+interface TrendingUser {
+  _id: string;
+  name?: string;
+  email?: string;
+  image?: string;
+  publishedBlogsCount: number;
+}
 
 export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedTag, setSelectedTag] = useState("All");
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [trendingTags, setTrendingTags] = useState<Tag[]>([]);
+  const [trendingUsers, setTrendingUsers] = useState<TrendingUser[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const featuredPost = blogPosts.find(post => post.featured) || blogPosts[0];
-  const regularPosts = blogPosts.filter(post => !post.featured);
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [blogsRes, categoriesRes, tagsRes, usersRes] = await Promise.all([
+        fetch("/api/blogs"),
+        fetch("/api/categories"),
+        fetch("/api/tags"),
+        fetch("/api/users")
+      ]);
+
+      if (blogsRes.ok) {
+        const blogs = await blogsRes.json();
+        // Fetch like data for each blog
+        const blogsWithLikes = await Promise.all(
+          blogs.map(async (blog: BlogPost) => {
+            try {
+              const likeResponse = await fetch(`/api/blogs/${blog._id}/like`);
+              if (likeResponse.ok) {
+                const likeData = await likeResponse.json();
+                return { ...blog, likeCount: likeData.likeCount };
+              }
+            } catch (error) {
+              console.error("Error fetching likes for blog:", blog._id, error);
+            }
+            return blog;
+          })
+        );
+        setBlogPosts(blogsWithLikes);
+      }
+
+      if (categoriesRes.ok) {
+        const cats = await categoriesRes.json();
+        setCategories(cats);
+      }
+
+      if (tagsRes.ok) {
+        const tags = await tagsRes.json();
+        setTrendingTags(tags);
+      }
+
+      if (usersRes.ok) {
+        const users = await usersRes.json();
+        setTrendingUsers(users);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter posts based on search, category, and tag
+  const filteredPosts = blogPosts.filter(post => {
+    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          post.content.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === "All" || post.categoryId?.name === selectedCategory;
+    const matchesTag = selectedTag === "All" || post.tags.some(tag => tag.name === selectedTag);
+    return matchesSearch && matchesCategory && matchesTag;
+  });
+
+  // Featured post is the most recent post
+  const featuredPost = filteredPosts[0];
+  const regularPosts = filteredPosts.slice(1);
+
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div className="text-center py-8">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <div className="relative rounded-xl overflow-hidden bg-gradient-to-r from-primary/10 to-secondary/10 p-8 md:p-12">
-        <div className="relative z-10 max-w-2xl">
-          <Badge className="mb-4 flex items-center gap-1">
-            <Sparkles className="h-4 w-4" />
-            Featured Post
-          </Badge>
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">{featuredPost.title}</h1>
-          <p className="text-lg text-muted-foreground mb-6">{featuredPost.excerpt}</p>
-          <div className="flex flex-wrap items-center gap-4 mb-6">
-            <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={featuredPost.author.avatar} />
-                <AvatarFallback>{featuredPost.author.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <span className="font-medium">{featuredPost.author.name}</span>
+      {featuredPost && (
+        <div className="relative rounded-xl overflow-hidden bg-gradient-to-r from-primary/10 to-secondary/10 p-8 md:p-12">
+          <div className="relative z-10 max-w-2xl">
+            <Badge className="mb-4 flex items-center gap-1">
+              <Sparkles className="h-4 w-4" />
+              Featured Post
+            </Badge>
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">{featuredPost.title}</h1>
+            <p className="text-lg text-muted-foreground mb-6">{featuredPost.content.substring(0, 200)}...</p>
+            <div className="flex flex-wrap items-center gap-4 mb-6">
+              <div className="flex items-center gap-2">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback>{featuredPost.authorId.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <span className="font-medium">{featuredPost.authorId.name}</span>
+              </div>
+              <span className="flex items-center gap-1 text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                {new Date(featuredPost.createdAt).toLocaleDateString()}
+              </span>
             </div>
-            <span className="flex items-center gap-1 text-muted-foreground">
-              <Calendar className="h-4 w-4" />
-              {featuredPost.date}
-            </span>
-            <span className="flex items-center gap-1 text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              {featuredPost.readTime}
-            </span>
+            <Button asChild>
+              <Link href={`/blog/${featuredPost._id}`}>Read Article</Link>
+            </Button>
           </div>
-          <Button asChild>
-            <Link href={`/blog/${featuredPost.id}`}>Read Article</Link>
-          </Button>
+          <div className="absolute top-0 right-0 bottom-0 w-1/3 bg-gradient-to-l from-primary/20 to-transparent"></div>
         </div>
-        <div className="absolute top-0 right-0 bottom-0 w-1/3 bg-gradient-to-l from-primary/20 to-transparent"></div>
-      </div>
+      )}
 
       {/* Search and Filters */}
       <div className="flex flex-col md:flex-row gap-4">
@@ -169,14 +196,14 @@ export default function HomePage() {
               </option>
             ))}
           </select>
-          <select 
+          <select
             className="border rounded-md px-3 py-2 text-sm"
             value={selectedTag}
             onChange={(e) => setSelectedTag(e.target.value)}
           >
             <option value="All">All Tags</option>
             {trendingTags.map((tag) => (
-              <option key={tag} value={tag}>{tag}</option>
+              <option key={tag.name} value={tag.name}>{tag.name}</option>
             ))}
           </select>
         </div>
@@ -194,53 +221,40 @@ export default function HomePage() {
 
           <div className="grid gap-6">
             {regularPosts.map((post) => (
-              <Card key={post.id} className="hover:shadow-md transition-shadow">
+              <Card key={post._id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
                   <div className="flex flex-wrap items-center gap-4 mb-3">
-                    <Badge variant="secondary">{post.category}</Badge>
+                    {post.categoryId && <Badge variant="secondary">{post.categoryId.name}</Badge>}
                     <span className="text-sm text-muted-foreground flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      {post.date}
-                    </span>
-                    <span className="text-sm text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {post.readTime}
+                      {new Date(post.createdAt).toLocaleDateString()}
                     </span>
                   </div>
                   <CardTitle>
-                    <Link href={`/blog/${post.id}`} className="hover:text-primary transition-colors">
+                    <Link href={`/blog/${post._id}`} className="hover:text-primary transition-colors">
                       {post.title}
                     </Link>
                   </CardTitle>
-                  <CardDescription>{post.excerpt}</CardDescription>
+                  <CardDescription>{post.content.substring(0, 200)}...</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={post.author.avatar} />
-                        <AvatarFallback>{post.author.name.charAt(0)}</AvatarFallback>
+                        <AvatarFallback>{post.authorId.name.charAt(0)}</AvatarFallback>
                       </Avatar>
-                      <span className="font-medium">{post.author.name}</span>
+                      <span className="font-medium">{post.authorId.name}</span>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
-                        <Eye className="h-4 w-4" />
-                        {post.views}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MessageCircle className="h-4 w-4" />
-                        {post.comments}
-                      </span>
-                      <span className="flex items-center gap-1">
                         <Heart className="h-4 w-4" />
-                        {post.likes}
+                        {post.likeCount || 0}
                       </span>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-4">
                     {post.tags.map((tag) => (
-                      <Badge key={tag} variant="outline">{tag}</Badge>
+                      <Badge key={tag.name} variant="outline">{tag.name}</Badge>
                     ))}
                   </div>
                 </CardContent>
@@ -281,16 +295,40 @@ export default function HomePage() {
             <CardContent>
               <div className="flex flex-wrap gap-2">
                 {trendingTags.map((tag) => (
-                  <Badge 
-                    key={tag} 
-                    variant="outline" 
+                  <Badge
+                    key={tag.name}
+                    variant="outline"
                     className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
-                    onClick={() => setSelectedTag(tag)}
+                    onClick={() => setSelectedTag(tag.name)}
                   >
-                    {tag}
+                    {tag.name}
                   </Badge>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Trending Users */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Trending Users
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {trendingUsers.map((user) => (
+                <div key={user._id} className="flex items-center gap-3">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.image} />
+                    <AvatarFallback>{user.name?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{user.name || user.email}</p>
+                    <p className="text-xs text-muted-foreground">{user.publishedBlogsCount} blogs</p>
+                  </div>
+                </div>
+              ))}
             </CardContent>
           </Card>
 

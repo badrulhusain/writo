@@ -70,22 +70,22 @@ const DATA = {
     social: {
       GitHub: {
         name: "GitHub",
-        url: "#",
+        url: process.env.NEXT_PUBLIC_GITHUB_URL || "#",
         icon: Icons.github,
       },
       LinkedIn: {
         name: "LinkedIn",
-        url: "#",
+        url: process.env.NEXT_PUBLIC_LINKEDIN_URL || "#",
         icon: Icons.email,
       },
       X: {
         name: "X",
-        url: "#",
+        url: process.env.NEXT_PUBLIC_X_URL || "#",
         icon: Icons.x,
       },
       YouTube: {
         name: "YouTube",
-        url: "#",
+        url: process.env.NEXT_PUBLIC_YOUTUBE_URL || "#",
         icon: Icons.youtube,
       },
     },

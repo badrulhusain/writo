@@ -8,6 +8,9 @@ interface IUser extends Document {
   password?: string;
   role?: "ADMIN" | "USER";
   isTwoFactorEnabled?: boolean;
+  bio?: string;
+  location?: string;
+  website?: string;
   accounts?: mongoose.Types.ObjectId[];
   twoFactorConfirmation?: mongoose.Types.ObjectId;
   blogs?: mongoose.Types.ObjectId[];
@@ -21,6 +24,9 @@ const UserSchema = new mongoose.Schema<IUser>({
   password: { type: String },
   role: { type: String, enum: ["ADMIN", "USER"], default: "USER" },
   isTwoFactorEnabled: { type: Boolean, default: false },
+  bio: { type: String },
+  location: { type: String },
+  website: { type: String },
   accounts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Account" }],
   twoFactorConfirmation: {
     type: mongoose.Schema.Types.ObjectId,

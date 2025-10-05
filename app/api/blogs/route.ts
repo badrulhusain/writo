@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     console.log("Parsing request body...");
     const body = await req.json();
     console.log("Request body:", body);
-    const { title, content, category, tags, publishImmediately } = body;
+    const { title, content, category, tags, status } = body;
 
     // Validate required fields
     if (!title || !content) {
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
       authorId: session.user.id,
       categoryId: categoryDoc?._id,
       tags: tagIds,
-      status: publishImmediately ? "published" : "draft",
+      status,
     });
     const blog = await Blog.create({
       title,
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
       authorId: new mongoose.Types.ObjectId(session.user.id),
       categoryId: categoryDoc?._id,
       tags: tagIds,
-      status: publishImmediately ? "published" : "draft",
+      status,
     });
     console.log("Blog created:", blog);
 

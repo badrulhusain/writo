@@ -47,9 +47,10 @@ export default function BlogPage() {
 
   const fetchBlogs = async () => {
     try {
-      const response = await fetch("/api/blogs");
+      const response = await fetch("/api/user/blogs");
       if (response.ok) {
-        const blogs = await response.json();
+        const data = await response.json();
+        const blogs = data.blogs;
         // Fetch like data for each blog
         const blogsWithLikes = await Promise.all(
           blogs.map(async (blog: BlogPost) => {

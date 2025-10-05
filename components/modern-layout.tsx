@@ -16,7 +16,8 @@ import {
   Menu,
   X,
   User as UserIcon,
-  Sparkles
+  Sparkles,
+  HomeIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -31,8 +32,9 @@ export function ModernLayout({ children }: ModernLayoutProps) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const navigation = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "My Posts", href: "/blog", icon: FileText },
+  
+    { name: "Home", href: "/home", icon:HomeIcon },
+    { name: "Posts", href: "/blog", icon: FileText },
     { name: "Create Post", href: "/blog/create", icon: Sparkles },
     { name: "Profile", href: "/profile", icon: UserIcon },
     { name: "Settings", href: "/settings", icon: Settings },

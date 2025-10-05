@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,11 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Camera, 
-  Mail, 
-  User, 
-  Calendar, 
+import {
+  Camera,
+  Mail,
+  User,
+  Calendar,
   MapPin,
   Link as LinkIcon,
   Save,
@@ -25,37 +25,90 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { settings } from "@/actions/settings";
+import { toast } from "sonner";
 
-// Mock user data
-const userData = {
-  name: "Alex Johnson",
-  email: "alex.johnson@example.com",
-  avatar: "https://github.com/shadcn.png",
-  bio: "Senior Developer & AI Enthusiast. Passionate about creating innovative web applications with cutting-edge technologies.",
-  location: "San Francisco, CA",
-  website: "https://alexjohnson.dev",
-  joinDate: "January 2022",
-  role: "ADMIN",
-  posts: 24,
-  followers: 128,
-  following: 56
-};
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  bio: string;
+  location: string;
+  website: string;
+  role: string;
+  createdAt: string;
+}
+
+interface UserStats {
+  posts: number;
+  followers: number;
+  following: number;
+}
 
 export default function ProfilePage() {
-  const [name, setName] = useState(userData.name);
-  const [bio, setBio] = useState(userData.bio);
-  const [location, setLocation] = useState(userData.location);
-  const [website, setWebsite] = useState(userData.website);
+  const [userData, setUserData] = useState<UserProfile | null>(null);
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [name, setName] = useState("");
+  const [bio, setBio] = useState("");
+  const [location, setLocation] = useState("");
+  const [website, setWebsite] = useState("");
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const response = await fetch("/api/user/profile");
+      if (response.ok) {
+        const data = await response.json();
+        setUserData(data.user);
+        setStats(data.stats);
+        setName(data.user.name);
+        setBio(data.user.bio);
+        setLocation(data.user.location);
+        setWebsite(data.user.website);
+      }
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSaveProfile = () => {
-    // Save profile functionality
-    console.log("Saving profile...");
+    startTransition(() => {
+      settings({
+        name,
+        bio,
+        location,
+        website,
+      }).then((data) => {
+        if (data.error) {
+          toast.error(data.error);
+        } else if (data.success) {
+          toast.success(data.success);
+          fetchProfile(); // Refresh data
+        }
+      });
+    });
   };
 
   const handleChangePassword = () => {
-    // Change password functionality
-    console.log("Changing password...");
+    // Redirect to settings page for password change
+    window.location.href = "/settings";
   };
+
+  if (loading) {
+    return <div className="text-center py-8">Loading profile...</div>;
+  }
+
+  if (!userData) {
+    return <div className="text-center py-8">Failed to load profile</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -72,22 +125,22 @@ export default function ProfilePage() {
               <CardTitle>Profile Picture</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col items-center gap-4">
-              <div className="relative">
-                <Avatar className="h-32 w-32">
-                  <AvatarImage src={userData.avatar} />
-                  <AvatarFallback>{userData.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <Button 
-                  size="sm" 
-                  className="absolute bottom-0 right-0 rounded-full p-2 h-8 w-8"
-                >
-                  <Camera className="h-4 w-4" />
-                </Button>
-              </div>
-              <Button variant="outline" className="w-full">
-                Change Picture
-              </Button>
-            </CardContent>
+               <div className="relative">
+                 <Avatar className="h-32 w-32">
+                   <AvatarImage src={userData.avatar} />
+                   <AvatarFallback>{userData.name.charAt(0)}</AvatarFallback>
+                 </Avatar>
+                 <Button
+                   size="sm"
+                   className="absolute bottom-0 right-0 rounded-full p-2 h-8 w-8"
+                 >
+                   <Camera className="h-4 w-4" />
+                 </Button>
+               </div>
+               <Button variant="outline" className="w-full">
+                 Change Picture
+               </Button>
+             </CardContent>
           </Card>
 
           <Card>
@@ -97,15 +150,15 @@ export default function ProfilePage() {
             <CardContent className="space-y-4">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Posts</span>
-                <span className="font-medium">{userData.posts}</span>
+                <span className="font-medium">{stats?.posts || 0}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Followers</span>
-                <span className="font-medium">{userData.followers}</span>
+                <span className="font-medium">{stats?.followers || 0}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Following</span>
-                <span className="font-medium">{userData.following}</span>
+                <span className="font-medium">{stats?.following || 0}</span>
               </div>
             </CardContent>
           </Card>
@@ -137,9 +190,9 @@ export default function ProfilePage() {
                   <Label htmlFor="email">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="email" 
-                      value={userData.email} 
+                    <Input
+                      id="email"
+                      value={userData.email}
                       disabled
                       className="pl-10"
                     />
@@ -188,9 +241,9 @@ export default function ProfilePage() {
               </div>
 
               <div className="flex items-center gap-4">
-                <Button onClick={handleSaveProfile}>
+                <Button onClick={handleSaveProfile} disabled={isPending}>
                   <Save className="h-4 w-4 mr-2" />
-                  Save Changes
+                  {isPending ? "Saving..." : "Save Changes"}
                 </Button>
                 <Button variant="outline" onClick={handleChangePassword}>
                   <Key className="h-4 w-4 mr-2" />
@@ -214,7 +267,7 @@ export default function ProfilePage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Member Since</span>
-                <span>{userData.joinDate}</span>
+                <span>{new Date(userData.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}</span>
               </div>
             </CardContent>
           </Card>

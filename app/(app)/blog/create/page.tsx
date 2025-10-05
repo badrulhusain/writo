@@ -67,7 +67,7 @@ export default function CreateBlogPage() {
           content: content.trim(),
           category: category || undefined,
           tags,
-          publishImmediately: false,
+          status: "draft",
         }),
       });
 
@@ -106,18 +106,18 @@ export default function CreateBlogPage() {
           content: content.trim(),
           category: category || undefined,
           tags,
-          publishImmediately: true,
+          status: publishImmediately ? "published" : "draft",
         }),
       });
 
       if (response.ok) {
         const blog = await response.json();
-        console.log("Blog published:", blog);
+        console.log("Blog saved:", blog);
         router.push("/blog"); // Redirect to blog list
       } else {
         const error = await response.json();
-        console.error("Error publishing blog:", error);
-        alert("Error publishing blog: " + error.error);
+        console.error("Error saving blog:", error);
+        alert("Error saving blog: " + error.error);
       }
     } catch (error) {
       console.error("Error:", error);
@@ -216,7 +216,7 @@ export default function CreateBlogPage() {
                    disabled={isLoading}
                  >
                    <Save className="h-4 w-4 mr-2" />
-                   {isLoading ? "Publishing..." : "Publish"}
+                   {isLoading ? "Saving..." : (publishImmediately ? "Publish" : "Save Draft")}
                  </Button>
                </div>
             </CardContent>

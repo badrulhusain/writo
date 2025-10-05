@@ -3,7 +3,6 @@
 import * as z from "zod";
 import bcrypt from "bcryptjs";
 
-import { update } from "@/Auth";
 import { connectDB, User } from "@/lib/db";
 import { SettingsSchema } from "@/schemas";
 import { getUserByEmail, getUserById } from "@/data/user";
@@ -81,16 +80,7 @@ export const settings = async (
     { new: true }
   );
 
-  if (updatedUser) {
-    update({
-      user: {
-        name: updatedUser.name,
-        email: updatedUser.email,
-        isTwoFactorEnabled: updatedUser.isTwoFactorEnabled,
-        role: updatedUser.role,
-      }
-    });
-  }
+  // Note: Session update removed as update function not available in NextAuth v5
 
   return { success: "Settings Updated!" }
 }
