@@ -1,20 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Sparkles, 
-  Wand2, 
-  FileText, 
-  Tag, 
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { UnsplashImagePicker } from "@/components/unsplash-image-picker";
+import {
+  Sparkles,
+  Wand2,
+  FileText,
+  Tag,
   Eye,
   SpellCheck,
   FileSearch,
   Lightbulb,
-  TrendingUp
+  TrendingUp,
+  Image as ImageIcon
 } from "lucide-react";
 
 interface AIToolsProps {
@@ -22,17 +25,30 @@ interface AIToolsProps {
    onContentChange: (content: string) => void;
    title: string;
    onTitleChange: (title: string) => void;
+   onAddTag?: (tag: string) => void;
+   selectedImage?: any;
+   onImageSelect?: (image: any) => void;
 }
 
-export function AITools({ content, onContentChange, onTitleChange }: AIToolsProps) {
-   const [suggestedTags, setSuggestedTags] = useState<string[]>([
-     "Technology", "AI", "Web Development", "Next.js", "React", "JavaScript"
-   ]);
-   const [aiSummary, setAiSummary] = useState("");
-   const [seoScore, setSeoScore] = useState(75);
-   const [loading, setLoading] = useState<string | null>(null);
+export function AITools({ content, onContentChange, onTitleChange, onAddTag, selectedImage: propSelectedImage, onImageSelect }: AIToolsProps) {
+    const [suggestedTags, setSuggestedTags] = useState<string[]>([
+      "Technology", "AI", "Web Development", "Next.js", "React", "JavaScript"
+    ]);
+    const [aiSummary, setAiSummary] = useState("");
+    const [seoScore, setSeoScore] = useState(75);
+    const [loading, setLoading] = useState<string | null>(null);
+    const [selectedImage, setSelectedImage] = useState<any>(propSelectedImage || null);
+    const [imagePickerOpen, setImagePickerOpen] = useState(false);
+
+    // Sync with prop changes
+    useEffect(() => {
+      if (propSelectedImage !== undefined && propSelectedImage !== selectedImage) {
+        setSelectedImage(propSelectedImage);
+      }
+    }, [propSelectedImage]);
 
    const callAI = async (operation: string) => {
+     console.log("Calling AI with operation:", operation, "content length:", content?.length, "content preview:", content?.substring(0, 50));
      setLoading(operation);
      try {
        const response = await fetch("/api/ai", {
@@ -98,7 +114,7 @@ export function AITools({ content, onContentChange, onTitleChange }: AIToolsProp
             <Button
               variant="outline"
               onClick={handleSuggestHeadline}
-              disabled={loading === "suggest-headline"}
+              disabled={loading === "suggest-headline" || !content || content.trim().length === 0}
               className="flex items-center gap-2"
             >
               <Lightbulb className="h-4 w-4" />
@@ -107,7 +123,7 @@ export function AITools({ content, onContentChange, onTitleChange }: AIToolsProp
             <Button
               variant="outline"
               onClick={handleFixGrammar}
-              disabled={loading === "fix-grammar"}
+              disabled={loading === "fix-grammar" || !content || content.trim().length === 0}
               className="flex items-center gap-2"
             >
               <SpellCheck className="h-4 w-4" />
@@ -116,7 +132,7 @@ export function AITools({ content, onContentChange, onTitleChange }: AIToolsProp
             <Button
               variant="outline"
               onClick={handleGenerateSummary}
-              disabled={loading === "generate-summary"}
+              disabled={loading === "generate-summary" || !content || content.trim().length === 0}
               className="flex items-center gap-2"
             >
               <FileSearch className="h-4 w-4" />
@@ -125,7 +141,7 @@ export function AITools({ content, onContentChange, onTitleChange }: AIToolsProp
             <Button
               variant="outline"
               onClick={handleImproveSEO}
-              disabled={loading === "improve-seo"}
+              disabled={loading === "improve-seo" || !content || content.trim().length === 0}
               className="flex items-center gap-2"
             >
               <TrendingUp className="h-4 w-4" />
@@ -162,10 +178,11 @@ export function AITools({ content, onContentChange, onTitleChange }: AIToolsProp
         <CardContent>
           <div className="flex flex-wrap gap-2">
             {suggestedTags.map((tag) => (
-              <Badge 
-                key={tag} 
-                variant="secondary" 
+              <Badge
+                key={tag}
+                variant="secondary"
                 className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
+                onClick={() => onAddTag?.(tag)}
               >
                 {tag}
               </Badge>
@@ -175,7 +192,7 @@ export function AITools({ content, onContentChange, onTitleChange }: AIToolsProp
             variant="outline"
             size="sm"
             onClick={handleSuggestTags}
-            disabled={loading === "suggest-tags"}
+            disabled={loading === "suggest-tags" || !content || content.trim().length === 0}
             className="mt-3 w-full"
           >
             <Sparkles className="h-4 w-4 mr-2" />
@@ -227,6 +244,72 @@ export function AITools({ content, onContentChange, onTitleChange }: AIToolsProp
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Unsplash Image Picker */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ImageIcon className="h-5 w-5" />
+            Featured Image
+          </CardTitle>
+          <CardDescription>Choose a beautiful image from Unsplash for your blog post</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {selectedImage ? (
+            <div className="space-y-4">
+              <div className="relative">
+                <img
+                  src={selectedImage.thumb}
+                  alt={selectedImage.alt}
+                  className="w-full h-48 object-cover rounded-lg"
+                />
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="absolute top-2 right-2"
+                  onClick={() => {
+                    setSelectedImage(null);
+                    onImageSelect?.(null);
+                  }}
+                >
+                  Remove
+                </Button>
+              </div>
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>Photo by {selectedImage.photographer}</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(selectedImage.photographerUrl, '_blank')}
+                >
+                  View on Unsplash
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Dialog open={imagePickerOpen} onOpenChange={setImagePickerOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full h-32 border-dashed">
+                  <div className="flex flex-col items-center gap-2">
+                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Choose from Unsplash</span>
+                  </div>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
+                <UnsplashImagePicker
+                  onImageSelect={(image) => {
+                    setSelectedImage(image);
+                    onImageSelect?.(image);
+                    setImagePickerOpen(false);
+                  }}
+                  onClose={() => setImagePickerOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
+          )}
         </CardContent>
       </Card>
     </div>

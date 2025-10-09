@@ -6,11 +6,13 @@ import mongoose from "mongoose";
 export async function GET() {
   try {
     await connectDB();
-    const blogs = await Blog.find()
+    const blogs = await Blog.find({ status: "published" })
       .populate('authorId', 'name email')
       .populate('categoryId', 'name')
       .populate('tags', 'name')
       .sort({ createdAt: -1 });
+    console.log(`Fetched ${blogs.length} published blogs`);
+    blogs.forEach(blog => console.log(`Blog: ${blog.title} - Status: ${blog.status}`));
     return NextResponse.json(blogs);
   } catch (error) {
     console.error('Error fetching blogs:', error);
@@ -33,7 +35,7 @@ export async function POST(req: Request) {
     console.log("Parsing request body...");
     const body = await req.json();
     console.log("Request body:", body);
-    const { title, content, category, tags, status } = body;
+    const { title, content, category, tags, status, featuredImage } = body;
 
     // Validate required fields
     if (!title || !content) {
@@ -69,6 +71,7 @@ export async function POST(req: Request) {
       categoryId: categoryDoc?._id,
       tags: tagIds,
       status,
+      featuredImage,
     });
     const blog = await Blog.create({
       title,
@@ -77,6 +80,7 @@ export async function POST(req: Request) {
       categoryId: categoryDoc?._id,
       tags: tagIds,
       status,
+      featuredImage,
     });
     console.log("Blog created:", blog);
 

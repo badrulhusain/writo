@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
@@ -15,7 +15,8 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const blogId = params.id;
+    const { id } = await params;
+    const blogId = id;
     const userId = new mongoose.Types.ObjectId(session.user.id);
 
     // Check if like already exists
@@ -44,11 +45,12 @@ export async function POST(
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
-    const blogId = params.id;
+    const { id } = await params;
+    const blogId = id;
 
     // Count likes for this blog
     const likeCount = await Like.countDocuments({

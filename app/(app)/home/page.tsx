@@ -35,6 +35,12 @@ interface BlogPost {
   createdAt: string;
   status: string;
   likeCount?: number;
+  featuredImage?: {
+    url: string;
+    alt: string;
+    photographer: string;
+    photographerUrl: string;
+  };
 }
 
 interface Category {
@@ -145,21 +151,31 @@ export default function HomePage() {
       {/* Hero Section */}
       {featuredPost && (
         <div className="relative rounded-xl overflow-hidden bg-gradient-to-r from-primary/10 to-secondary/10 p-8 md:p-12">
+          {featuredPost.featuredImage && (
+            <div className="absolute inset-0">
+              <img
+                src={featuredPost.featuredImage.url}
+                alt={featuredPost.featuredImage.alt}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/40"></div>
+            </div>
+          )}
           <div className="relative z-10 max-w-2xl">
             <Badge className="mb-4 flex items-center gap-1">
               <Sparkles className="h-4 w-4" />
               Featured Post
             </Badge>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">{featuredPost.title}</h1>
-            <p className="text-lg text-muted-foreground mb-6">{featuredPost.content.substring(0, 200)}...</p>
+            <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white">{featuredPost.title}</h1>
+            <p className="text-lg text-gray-200 mb-6">{featuredPost.content.substring(0, 200)}...</p>
             <div className="flex flex-wrap items-center gap-4 mb-6">
               <div className="flex items-center gap-2">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback>{featuredPost.authorId.name.charAt(0)}</AvatarFallback>
                 </Avatar>
-                <span className="font-medium">{featuredPost.authorId.name}</span>
+                <span className="font-medium text-white">{featuredPost.authorId.name}</span>
               </div>
-              <span className="flex items-center gap-1 text-muted-foreground">
+              <span className="flex items-center gap-1 text-gray-200">
                 <Calendar className="h-4 w-4" />
                 {new Date(featuredPost.createdAt).toLocaleDateString()}
               </span>
@@ -168,7 +184,9 @@ export default function HomePage() {
               <Link href={`/blog/${featuredPost._id}`}>Read Article</Link>
             </Button>
           </div>
-          <div className="absolute top-0 right-0 bottom-0 w-1/3 bg-gradient-to-l from-primary/20 to-transparent"></div>
+          {!featuredPost.featuredImage && (
+            <div className="absolute top-0 right-0 bottom-0 w-1/3 bg-gradient-to-l from-primary/20 to-transparent"></div>
+          )}
         </div>
       )}
 
@@ -221,7 +239,17 @@ export default function HomePage() {
 
           <div className="grid gap-6">
             {regularPosts.map((post) => (
-              <Card key={post._id} className="hover:shadow-md transition-shadow">
+              <Card key={post._id} className="hover:shadow-md transition-shadow overflow-hidden">
+                {post.featuredImage && (
+                  <div className="relative h-48 overflow-hidden">
+                    <img
+                      src={post.featuredImage.url}
+                      alt={post.featuredImage.alt}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/20"></div>
+                  </div>
+                )}
                 <CardHeader>
                   <div className="flex flex-wrap items-center gap-4 mb-3">
                     {post.categoryId && <Badge variant="secondary">{post.categoryId.name}</Badge>}

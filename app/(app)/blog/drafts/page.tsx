@@ -9,7 +9,9 @@ import {
   Plus,
   Search,
   Share2,
-  User
+  User,
+  Edit,
+  Trash2
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -34,25 +36,26 @@ interface BlogPost {
   userLiked?: boolean;
 }
 
-export default function BlogPage() {
+export default function DraftsPage() {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filter, setFilter] = useState<"all" | "published" | "drafts">("all");
 
   useEffect(() => {
-    fetchBlogs();
+    fetchDrafts();
   }, []);
 
-  const fetchBlogs = async () => {
+  const fetchDrafts = async () => {
     try {
       const response = await fetch("/api/user/blogs");
       if (response.ok) {
         const data = await response.json();
-        const blogs = data.blogs;
-        // Fetch like data for each blog
-        const blogsWithLikes = await Promise.all(
-          blogs.map(async (blog: BlogPost) => {
+        const allBlogs = data.blogs;
+        // Filter to only show drafts
+        const drafts = allBlogs.filter((blog: BlogPost) => blog.status === 'draft');
+        // Fetch like data for each draft
+        const draftsWithLikes = await Promise.all(
+          drafts.map(async (blog: BlogPost) => {
             try {
               const likeResponse = await fetch(`/api/blogs/${blog._id}/like`);
               if (likeResponse.ok) {
@@ -65,10 +68,10 @@ export default function BlogPage() {
             return blog;
           })
         );
-        setBlogPosts(blogsWithLikes);
+        setBlogPosts(draftsWithLikes);
       }
     } catch (error) {
-      console.error("Error fetching blogs:", error);
+      console.error("Error fetching drafts:", error);
     } finally {
       setLoading(false);
     }
@@ -124,26 +127,42 @@ export default function BlogPage() {
     });
   };
 
-  const filteredPosts = blogPosts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.content.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filter === "all" ||
-                         (filter === "published" && post.status === "published") ||
-                         (filter === "drafts" && post.status === "draft");
-    return matchesSearch && matchesFilter;
-  });
+  const handleDelete = async (blogId: string) => {
+    if (!confirm("Are you sure you want to delete this draft?")) return;
+
+    try {
+      const response = await fetch(`/api/blogs/${blogId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setBlogPosts(posts => posts.filter(post => post._id !== blogId));
+      } else {
+        alert("Failed to delete draft");
+      }
+    } catch (error) {
+      console.error("Error deleting draft:", error);
+      alert("Error deleting draft");
+    }
+  };
+
+  const filteredPosts = blogPosts.filter(post =>
+    post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    post.content.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">My Blog Posts</h1>
-          <p className="text-muted-foreground">Manage and view all your published blog posts.</p>
+          <h1 className="text-3xl font-bold">My Drafts</h1>
+          <p className="text-muted-foreground">Manage and continue working on your draft blog posts.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search posts..."
+              placeholder="Search drafts..."
               className="pl-8 md:w-[300px]"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -158,45 +177,18 @@ export default function BlogPage() {
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex gap-2 border-b">
-        <button
-          onClick={() => setFilter("all")}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-            filter === "all"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          All Posts
-        </button>
-        <button
-          onClick={() => setFilter("published")}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-            filter === "published"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          Published
-        </button>
-        <button
-          onClick={() => setFilter("drafts")}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-            filter === "drafts"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          Drafts
-        </button>
-        <Button variant="ghost" size="sm" asChild className="ml-auto">
-          <Link href="/blog/drafts">View All Drafts</Link>
-        </Button>
-      </div>
-
       {loading ? (
-        <div className="text-center py-8">Loading blogs...</div>
+        <div className="text-center py-8">Loading drafts...</div>
+      ) : filteredPosts.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="text-muted-foreground mb-4">No drafts found</div>
+          <Button asChild>
+            <Link href="/blog/create">
+              <Plus className="mr-2 h-4 w-4" />
+              Create Your First Draft
+            </Link>
+          </Button>
+        </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredPosts.map((post) => (
@@ -242,9 +234,19 @@ export default function BlogPage() {
                     <Share2 className="h-4 w-4" />
                   </Button>
                 </div>
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`/blog/${post._id}`}>View</Link>
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/blog/${post._id}/edit`}>Edit</Link>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDelete(post._id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardFooter>
             </Card>
           ))}

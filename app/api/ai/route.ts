@@ -9,6 +9,7 @@ const client = new OpenAI({
 export async function POST(request: NextRequest) {
 	try {
 		const { operation, content } = await request.json();
+		console.log("AI API received operation:", operation, "content length:", content?.length, "content preview:", content?.substring(0, 50));
 
 		if (!operation || !content) {
 			return NextResponse.json({ error: "Missing operation or content" }, { status: 400 });

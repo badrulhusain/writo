@@ -31,6 +31,7 @@ export default function CreateBlogPage() {
   const [newTag, setNewTag] = useState("");
   const [publishImmediately, setPublishImmediately] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<any>(null);
 
   const handleAddTag = (tag: string) => {
     if (!tags.includes(tag)) {
@@ -50,6 +51,7 @@ export default function CreateBlogPage() {
   };
 
   const handleSaveDraft = async () => {
+    console.log("handleSaveDraft called - sending status: draft");
     if (!title.trim() || !content.trim()) {
       alert("Title and content are required");
       return;
@@ -68,6 +70,12 @@ export default function CreateBlogPage() {
           category: category || undefined,
           tags,
           status: "draft",
+          featuredImage: selectedImage ? {
+            url: selectedImage.url,
+            alt: selectedImage.alt,
+            photographer: selectedImage.photographer,
+            photographerUrl: selectedImage.photographerUrl
+          } : undefined,
         }),
       });
 
@@ -89,6 +97,7 @@ export default function CreateBlogPage() {
   };
 
   const handlePublish = async () => {
+    console.log("handlePublish called - publishImmediately:", publishImmediately, "- sending status:", publishImmediately ? "published" : "draft");
     if (!title.trim() || !content.trim()) {
       alert("Title and content are required");
       return;
@@ -107,6 +116,12 @@ export default function CreateBlogPage() {
           category: category || undefined,
           tags,
           status: publishImmediately ? "published" : "draft",
+          featuredImage: selectedImage ? {
+            url: selectedImage.url,
+            alt: selectedImage.alt,
+            photographer: selectedImage.photographer,
+            photographerUrl: selectedImage.photographerUrl
+          } : undefined,
         }),
       });
 
@@ -264,11 +279,14 @@ export default function CreateBlogPage() {
           </Card>
 
           {/* AI Tools */}
-          <AITools 
-            content={content} 
-            onContentChange={setContent} 
-            title={title} 
-            onTitleChange={setTitle} 
+          <AITools
+            content={content}
+            onContentChange={setContent}
+            title={title}
+            onTitleChange={setTitle}
+            onAddTag={handleAddTag}
+            selectedImage={selectedImage}
+            onImageSelect={setSelectedImage}
           />
         </div>
       </div>

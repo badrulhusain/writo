@@ -6,18 +6,19 @@ import { usePathname } from "next/navigation";
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { AdvancedThemeToggle } from "@/components/advanced-theme-toggle";
 import { UserButton } from "@/components/auth/user-button";
-import { 
-  LayoutDashboard, 
-  FileText, 
-  Users, 
-  Settings, 
-  ChevronLeft, 
+import {
+  LayoutDashboard,
+  FileText,
+  Users,
+  Settings,
+  ChevronLeft,
   ChevronRight,
   Menu,
   X,
   User as UserIcon,
   Sparkles,
-  HomeIcon
+  HomeIcon,
+  ImageIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -32,8 +33,9 @@ export function ModernLayout({ children }: ModernLayoutProps) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const navigation = [
-  
+
     { name: "Home", href: "/home", icon:HomeIcon },
+    { name: "Images", href: "/images", icon: ImageIcon },
     { name: "Posts", href: "/blog", icon: FileText },
     { name: "Create Post", href: "/blog/create", icon: Sparkles },
     { name: "Profile", href: "/profile", icon: UserIcon },

@@ -7,6 +7,12 @@ const BlogSchema = new mongoose.Schema({
   categoryId: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
   tags: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tag" }],
   status: { type: String, enum: ["draft", "published"], default: "draft" },
+  featuredImage: {
+    url: { type: String },
+    alt: { type: String },
+    photographer: { type: String },
+    photographerUrl: { type: String }
+  }
 }, { timestamps: true, collection: "blogs" });
 
 let Blog;
