@@ -6,6 +6,16 @@ import { usePathname } from "next/navigation";
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { AdvancedThemeToggle } from "@/components/advanced-theme-toggle";
 import { UserButton } from "@/components/auth/user-button";
+import { buttonVariants } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Dock, DockIcon } from "@/components/ui/dock";
+import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   FileText,
@@ -52,77 +62,100 @@ export function ModernLayout({ children }: ModernLayoutProps) {
         />
       )}
 
-      {/* Sidebar */}
-      <aside 
-        className={`fixed inset-y-0 left-0 z-50 transform ${
-          mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 lg:static lg:inset-0 transition-transform duration-300 ease-in-out ${
-          sidebarCollapsed ? "w-20" : "w-64"
-        } bg-secondary/30 backdrop-blur-sm border-r border-border flex flex-col`}
-      >
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          {!sidebarCollapsed && (
-            <h1 className="text-2xl font-bold text-foreground">WRITO</h1>
-          )}
-          <div className="flex items-center gap-2">
-            <AdvancedThemeToggle />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="hidden lg:flex"
-            >
-              {sidebarCollapsed ? (
-                <ChevronRight className="h-5 w-5" />
-              ) : (
-                <ChevronLeft className="h-5 w-5" />
-              )}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden"
+      {/* Mobile Drawer (small screens) */}
+      {mobileSidebarOpen && (
+        <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-secondary/30 backdrop-blur-sm border-r border-border p-4 lg:hidden">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold">WRITO</h2>
+            <button
+              className="inline-flex items-center justify-center rounded-md p-2"
               onClick={() => setMobileSidebarOpen(false)}
+              aria-label="Close sidebar"
             >
               <X className="h-5 w-5" />
-            </Button>
+            </button>
           </div>
-        </div>
+          <nav className="space-y-2">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors text-foreground hover:bg-muted`}
+                onClick={() => setMobileSidebarOpen(false)}
+              >
+                <item.icon className="h-5 w-5" />
+                <span>{item.name}</span>
+              </Link>
+            ))}
+          </nav>
+        </aside>
+      )}
 
-        <nav className="flex-1 p-4">
-          <ul className="space-y-2">
+      {/* Dock centered at bottom on large screens; mobile uses drawer above */}
+      <aside className="hidden lg:block fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 ease-in-out"> 
+        <TooltipProvider>
+          <Dock
+            direction="middle"
+            className={cn(
+              // horizontal dock centered at bottom
+              "mx-auto flex h-[58px] w-max items-center justify-center gap-2 rounded-2xl p-2 bg-secondary/30 backdrop-blur-sm border border-border",
+            )}
+          >
+            <DockIcon>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-12 rounded-full")}>
+                    <AdvancedThemeToggle />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Toggle Theme</p>
+                </TooltipContent>
+              </Tooltip>
+            </DockIcon>
+
+            <Separator orientation="vertical" className="h-6" />
+
             {navigation.map((item) => {
               const isActive = pathname === item.href;
               return (
-                <li key={item.name}>
-                  <Link
-                    href={item.href}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                      isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    {!sidebarCollapsed && <span>{item.name}</span>}
-                  </Link>
-                </li>
+                <DockIcon key={item.name}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={item.href}
+                        aria-label={item.name}
+                        className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-12 rounded-full", {
+                          "bg-primary text-primary-foreground": isActive,
+                        })}
+                      >
+                        <item.icon className="h-5 w-5" />
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{item.name}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </DockIcon>
               );
             })}
-          </ul>
-        </nav>
 
-        <div className="p-4 border-t border-border">
-          <div className="flex items-center gap-3">
-            <UserButton />
-            {!sidebarCollapsed && (
-              <div className="flex flex-col min-w-0">
-                <span className="text-sm font-medium truncate">{user?.name}</span>
-                <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
-              </div>
-            )}
-          </div>
-        </div>
+            <Separator orientation="vertical" className="h-6" />
+
+            <DockIcon>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-12 rounded-full")}>
+                    <UserButton />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Account</p>
+                </TooltipContent>
+              </Tooltip>
+            </DockIcon>
+          </Dock>
+        </TooltipProvider>
       </aside>
 
       {/* Main content */}

@@ -1,9 +1,10 @@
 import { Adapter, AdapterUser, AdapterAccount, AdapterSession } from "next-auth/adapters";
 import { 
-  User, 
+  User , 
   Account, 
   VerificationToken 
 } from "@/models";
+import { any } from "zod";
 
 export function MongoDBAdapter(): Adapter {
   return {
@@ -146,7 +147,7 @@ export function MongoDBAdapter(): Adapter {
 
     async createVerificationToken(token: { identifier: string; expires: Date; token: string }) {
       try {
-        const verificationToken = new VerificationToken(token);
+        const verificationToken = new (VerificationToken as any)(token);
         const savedToken = await verificationToken.save();
         return {
           ...savedToken.toObject(),
@@ -160,7 +161,7 @@ export function MongoDBAdapter(): Adapter {
 
     async useVerificationToken({ identifier, token }) {
       try {
-        const verificationToken = await VerificationToken.findOneAndDelete({ 
+        const verificationToken = await (VerificationToken as any).findOneAndDelete({ 
           email: identifier, 
           token 
         });

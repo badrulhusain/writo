@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { UnsplashImagePicker } from "@/components/unsplash-image-picker";
 import {
   Sparkles,
@@ -299,6 +299,7 @@ export function AITools({ content, onContentChange, onTitleChange, onAddTag, sel
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
+                <DialogTitle>Choose Image</DialogTitle>
                 <UnsplashImagePicker
                   onImageSelect={(image) => {
                     setSelectedImage(image);
