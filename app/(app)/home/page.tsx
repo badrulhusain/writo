@@ -85,23 +85,10 @@ export default function HomePage() {
       ]);
 
       if (blogsRes.ok) {
+        // The /api/blogs endpoint now includes likeCount aggregated server-side,
+        // so we can directly use the returned blogs without extra per-blog requests.
         const blogs = await blogsRes.json();
-        // Fetch like data for each blog
-        const blogsWithLikes = await Promise.all(
-          blogs.map(async (blog: BlogPost) => {
-            try {
-              const likeResponse = await fetch(`/api/blogs/${blog._id}/like`);
-              if (likeResponse.ok) {
-                const likeData = await likeResponse.json();
-                return { ...blog, likeCount: likeData.likeCount };
-              }
-            } catch (error) {
-              console.error("Error fetching likes for blog:", blog._id, error);
-            }
-            return blog;
-          })
-        );
-        setBlogPosts(blogsWithLikes);
+        setBlogPosts(blogs);
       }
 
       if (categoriesRes.ok) {

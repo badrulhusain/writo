@@ -1,4 +1,4 @@
-import { connectDB, Blog, Category, Tag } from "@/lib/db";
+import { connectDB, Blog, Category, Tag, Like } from "@/lib/db";
 import { auth } from "@/Auth";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
@@ -11,9 +11,26 @@ export async function GET() {
       .populate('categoryId', 'name')
       .populate('tags', 'name')
       .sort({ createdAt: -1 });
+    // Aggregate like counts for the returned blogs to avoid N+1 requests from the client
+    const blogIds = blogs.map((b: any) => b._id);
+    const likeCounts = await Like.aggregate([
+      { $match: { blogId: { $in: blogIds } } },
+      { $group: { _id: "$blogId", count: { $sum: 1 } } }
+    ]);
+
+    const likeMap = new Map<string, number>();
+    likeCounts.forEach((lc: any) => {
+      likeMap.set(String(lc._id), lc.count);
+    });
+
+    // Attach likeCount to each blog object
+    const blogsWithLikes = blogs.map((blog: any) => ({
+      ...blog.toObject ? blog.toObject() : blog,
+      likeCount: likeMap.get(String(blog._id)) || 0,
+    }));
     console.log(`Fetched ${blogs.length} published blogs`);
     blogs.forEach(blog => console.log(`Blog: ${blog.title} - Status: ${blog.status}`));
-    return NextResponse.json(blogs);
+  return NextResponse.json(blogsWithLikes);
   } catch (error) {
     console.error('Error fetching blogs:', error);
     return NextResponse.json({ error: "Failed to fetch blogs" }, { status: 500 });

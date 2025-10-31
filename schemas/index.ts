@@ -1,10 +1,11 @@
 import * as z from "zod";
-import { UserRole } from "@prisma/client";
 
 export const SettingsSchema = z.object({
   name: z.optional(z.string()),
   isTwoFactorEnabled: z.optional(z.boolean()),
-  role: z.optional(z.enum([UserRole.ADMIN, UserRole.USER])),
+  // Avoid referencing Prisma's runtime enum value here which can be undefined
+  // during bundling. Use a string enum in the schema instead.
+  role: z.optional(z.enum(["ADMIN", "USER"])),
   email: z.optional(z.string().email()),
   password: z.optional(z.string().min(6)),
   newPassword: z.optional(z.string().min(6)),

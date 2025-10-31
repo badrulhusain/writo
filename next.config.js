@@ -7,7 +7,7 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
-  swcMinify: true,
+  // `swcMinify` is not recognized in newer Next.js versions; remove to avoid warnings during build/deploy.
   // Enable response compression
   experimental: {
     optimizeCss: true,
