@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 
-const PasswordResetTokenSchema = new mongoose.Schema({
+interface IPasswordResetToken {
+  email: string;
+  token: string;
+  expires: Date;
+}
+
+const PasswordResetTokenSchema = new mongoose.Schema<IPasswordResetToken>({
   email: { type: String, required: true },
   token: { type: String, unique: true, required: true },
   expires: { type: Date, required: true },
@@ -8,10 +14,6 @@ const PasswordResetTokenSchema = new mongoose.Schema({
 
 PasswordResetTokenSchema.index({ email: 1, token: 1 }, { unique: true });
 
-let PasswordResetToken;
-try {
-  PasswordResetToken = mongoose.model("PasswordResetToken");
-} catch {
-  PasswordResetToken = mongoose.model("PasswordResetToken", PasswordResetTokenSchema);
-}
+const PasswordResetToken = (mongoose.models?.PasswordResetToken as mongoose.Model<IPasswordResetToken>) || mongoose.model<IPasswordResetToken>("PasswordResetToken", PasswordResetTokenSchema);
+
 export default PasswordResetToken;

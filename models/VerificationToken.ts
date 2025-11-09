@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 
-const VerificationTokenSchema = new mongoose.Schema({
+interface IVerificationToken {
+  email: string;
+  token: string;
+  expires: Date;
+}
+
+const VerificationTokenSchema = new mongoose.Schema<IVerificationToken>({
   email: { type: String, required: true },
   token: { type: String, unique: true, required: true },
   expires: { type: Date, required: true },
@@ -8,10 +14,6 @@ const VerificationTokenSchema = new mongoose.Schema({
 
 VerificationTokenSchema.index({ email: 1, token: 1 }, { unique: true });
 
-let VerificationToken;
-try {
-  VerificationToken = mongoose.model("VerificationToken");
-} catch {
-  VerificationToken = mongoose.model("VerificationToken", VerificationTokenSchema);
-}
+const VerificationToken = (mongoose.models?.VerificationToken as mongoose.Model<IVerificationToken>) || mongoose.model<IVerificationToken>("VerificationToken", VerificationTokenSchema);
+
 export default VerificationToken;

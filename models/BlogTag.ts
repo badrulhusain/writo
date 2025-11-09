@@ -18,11 +18,6 @@ const BlogTagSchema: Schema<IBlogTag> = new mongoose.Schema(
 // Ensure a blogId + tagId pair is unique
 BlogTagSchema.index({ blogId: 1, tagId: 1 }, { unique: true });
 
-let BlogTag: Model<IBlogTag>;
-try {
-  BlogTag = mongoose.model<IBlogTag>("BlogTag");
-} catch {
-  BlogTag = mongoose.model<IBlogTag>("BlogTag", BlogTagSchema);
-}
+const BlogTag = (mongoose.models?.BlogTag as Model<IBlogTag>) || mongoose.model<IBlogTag>("BlogTag", BlogTagSchema);
 
 export default BlogTag;

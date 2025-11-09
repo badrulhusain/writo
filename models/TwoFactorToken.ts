@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 
-const TwoFactorTokenSchema = new mongoose.Schema({
+interface ITwoFactorToken {
+  email: string;
+  token: string;
+  expires: Date;
+}
+
+const TwoFactorTokenSchema = new mongoose.Schema<ITwoFactorToken>({
   email: { type: String, required: true },
   token: { type: String, unique: true, required: true },
   expires: { type: Date, required: true },
@@ -8,10 +14,6 @@ const TwoFactorTokenSchema = new mongoose.Schema({
 
 TwoFactorTokenSchema.index({ email: 1, token: 1 }, { unique: true });
 
-let TwoFactorToken;
-try {
-  TwoFactorToken = mongoose.model("TwoFactorToken");
-} catch {
-  TwoFactorToken = mongoose.model("TwoFactorToken", TwoFactorTokenSchema);
-}
+const TwoFactorToken = (mongoose.models?.TwoFactorToken as mongoose.Model<ITwoFactorToken>) || mongoose.model<ITwoFactorToken>("TwoFactorToken", TwoFactorTokenSchema);
+
 export default TwoFactorToken;

@@ -1,6 +1,20 @@
 import mongoose from "mongoose";
 
-const AccountSchema = new mongoose.Schema({
+interface IAccount {
+  userId: mongoose.Types.ObjectId;
+  type: string;
+  provider: string;
+  providerAccountId: string;
+  refresh_token?: string;
+  access_token?: string;
+  expires_at?: number;
+  token_type?: string;
+  scope?: string;
+  id_token?: string;
+  session_state?: string;
+}
+
+const AccountSchema = new mongoose.Schema<IAccount>({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   type: { type: String, required: true },
   provider: { type: String, required: true },
@@ -16,10 +30,6 @@ const AccountSchema = new mongoose.Schema({
 
 AccountSchema.index({ provider: 1, providerAccountId: 1 }, { unique: true });
 
-let Account;
-try {
-  Account = mongoose.model("Account");
-} catch {
-  Account = mongoose.model("Account", AccountSchema);
-}
+const Account = (mongoose.models?.Account as mongoose.Model<IAccount>) || mongoose.model<IAccount>("Account", AccountSchema);
+
 export default Account;

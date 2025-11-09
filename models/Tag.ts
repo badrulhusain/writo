@@ -1,14 +1,15 @@
 import mongoose from "mongoose";
 
-const TagSchema = new mongoose.Schema({
+interface ITag {
+  name: string;
+  blogs?: mongoose.Types.ObjectId[];
+}
+
+const TagSchema = new mongoose.Schema<ITag>({
   name: { type: String, unique: true, required: true },
   blogs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Blog" }],
 }, { collection: "tags" });
 
-let Tag;
-try {
-  Tag = mongoose.model("Tag");
-} catch {
-  Tag = mongoose.model("Tag", TagSchema);
-}
+const Tag = (mongoose.models?.Tag as mongoose.Model<ITag>) || mongoose.model<ITag>("Tag", TagSchema);
+
 export default Tag;

@@ -3,7 +3,7 @@ import { connectDB, PasswordResetToken } from "@/lib/db";
 export const getPasswordResetTokenByToken = async (token: string) => {
   try {
     await connectDB();
-    const passwordResetToken = await PasswordResetToken.findOne({ token });
+    const passwordRese  tToken = await PasswordResetToken.findOne({ token });
 
     return passwordResetToken ? passwordResetToken.toObject() : null;
   } catch {

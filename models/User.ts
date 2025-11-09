@@ -35,11 +35,6 @@ const UserSchema = new mongoose.Schema<IUser>({
   blogs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Blog" }],
 }, { timestamps: true, collection: "users" });
 
-let User;
-try {
-  User = mongoose.model<IUser>("User");
-} catch {
-  User = mongoose.model<IUser>("User", UserSchema);
-}
+const User = (mongoose.models?.User as mongoose.Model<IUser>) || mongoose.model<IUser>("User", UserSchema);
 
 export default User;

@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { Dock, DockIcon } from "@/components/ui/dock";
-import { AdvancedThemeToggle } from "@/components/advanced-theme-toggle";
 
 export type IconProps = React.HTMLAttributes<SVGElement>;
 
@@ -105,19 +104,6 @@ export function DockDemo() {
       </p>
       <TooltipProvider>
         <Dock direction="middle" className="fixed bottom-8 left-1/2 transform -translate-x-1/2">
-          <DockIcon>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-12 rounded-full")}>
-                  <AdvancedThemeToggle />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Toggle Theme</p>
-              </TooltipContent>
-            </Tooltip>
-          </DockIcon>
-          <Separator orientation="vertical" className="h-full" />
           {DATA.navbar.map((item) => (
             <DockIcon key={item.label}>
               <Tooltip>

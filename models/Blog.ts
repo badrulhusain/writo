@@ -1,6 +1,21 @@
 import mongoose from "mongoose";
 
-const BlogSchema = new mongoose.Schema({
+interface IBlog {
+  title: string;
+  content: string;
+  authorId: mongoose.Types.ObjectId;
+  categoryId?: mongoose.Types.ObjectId;
+  tags?: mongoose.Types.ObjectId[];
+  status: "draft" | "published";
+  featuredImage?: {
+    url?: string;
+    alt?: string;
+    photographer?: string;
+    photographerUrl?: string;
+  };
+}
+
+const BlogSchema = new mongoose.Schema<IBlog>({
   title: { type: String, required: true },
   content: { type: String, required: true },
   authorId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -15,10 +30,6 @@ const BlogSchema = new mongoose.Schema({
   }
 }, { timestamps: true, collection: "blogs" });
 
-let Blog;
-try {
-  Blog = mongoose.model("Blog");
-} catch {
-  Blog = mongoose.model("Blog", BlogSchema);
-}
+const Blog = (mongoose.models?.Blog as mongoose.Model<IBlog>) || mongoose.model<IBlog>("Blog", BlogSchema);
+
 export default Blog;
