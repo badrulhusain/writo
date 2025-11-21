@@ -1,4 +1,4 @@
-import { connectDB, Blog, User, Category, Tag } from "@/lib/db";
+import { connectDB, Blog } from "@/lib/db";
 import { auth } from "@/Auth";
 import { NextResponse } from "next/server";
 
@@ -32,14 +32,43 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const body = await req.json();
     const blog = await Blog.findById(id);
 
-    if (!blog || blog.authorId.toString() !== session.user.id) {
+    const isAdmin = session.user.role === "ADMIN";
+
+    if (!blog || (!isAdmin && blog.authorId.toString() !== session.user.id)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const updatedBlog = await Blog.findByIdAndUpdate(id, {
-      title: body.title,
-      content: body.content,
-    }, { new: true })
+    const updates: Record<string, any> = {};
+
+    if (typeof body.title === "string") {
+      updates.title = body.title;
+    }
+
+    if (typeof body.content === "string") {
+      updates.content = body.content;
+    }
+
+    if (typeof body.status === "string") {
+      updates.status = body.status;
+    }
+
+    if (body.categoryId) {
+      updates.categoryId = body.categoryId;
+    }
+
+    if (Array.isArray(body.tags)) {
+      updates.tags = body.tags;
+    }
+
+    if (body.featuredImage) {
+      updates.featuredImage = body.featuredImage;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: "No valid fields provided" }, { status: 400 });
+    }
+
+    const updatedBlog = await Blog.findByIdAndUpdate(id, updates, { new: true })
       .populate('authorId', 'name email image')
       .populate('categoryId', 'name')
       .populate('tags', 'name');
@@ -60,7 +89,9 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     const { id } = await params;
     const blog = await Blog.findById(id);
 
-    if (!blog || blog.authorId.toString() !== session.user.id) {
+    const isAdmin = session.user.role === "ADMIN";
+
+    if (!blog || (!isAdmin && blog.authorId.toString() !== session.user.id)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

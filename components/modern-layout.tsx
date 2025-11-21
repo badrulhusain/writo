@@ -21,7 +21,8 @@ import {
   User as UserIcon,
   Sparkles,
   HomeIcon,
-  ImageIcon
+  ImageIcon,
+  ShieldCheck
 } from "lucide-react";
 
 interface ModernLayoutProps {
@@ -33,11 +34,13 @@ export function ModernLayout({ children }: ModernLayoutProps) {
   const user = useCurrentUser();
 
   const navigation = [
-
-    { name: "Home", href: "/home", icon:HomeIcon },
+    { name: "Home", href: "/home", icon: HomeIcon },
     { name: "Images", href: "/images", icon: ImageIcon },
     { name: "Posts", href: "/blog", icon: FileText },
     { name: "Create Post", href: "/blog/create", icon: Sparkles },
+    ...(user?.role === "ADMIN"
+      ? [{ name: "Admin", href: "/admin", icon: ShieldCheck }]
+      : []),
     { name: "Profile", href: "/profile", icon: UserIcon },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
