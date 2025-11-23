@@ -1,6 +1,7 @@
-import { connectDB, Blog } from "@/lib/db";
+import { connectDB, Blog, Like } from "@/lib/db";
 import { auth } from "@/Auth";
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -15,7 +16,26 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: "Blog not found" }, { status: 404 });
     }
 
-    return NextResponse.json(blog);
+    // Convert to plain object and attach dynamic like information
+    const blogObj = blog.toObject ? blog.toObject() : blog;
+
+    // Get like count for this blog
+    const likeCount = await Like.countDocuments({ blogId: blog._id });
+
+    // Determine if the current user has liked the blog
+    let likedByCurrentUser = false;
+    try {
+      const session = await auth();
+      if (session && session.user && session.user.id) {
+        const existing = await Like.findOne({ blogId: blog._id, userId: session.user.id });
+        likedByCurrentUser = Boolean(existing);
+      }
+    } catch (e) {
+      // If auth fails for some reason, just treat as not liked by current user
+      console.warn('Could not determine current user like state:', e);
+    }
+
+    return NextResponse.json({ ...blogObj, likeCount, likedByCurrentUser });
   } catch (error) {
     console.error('Error fetching blog:', error);
     return NextResponse.json({ error: "Failed to fetch blog" }, { status: 500 });
@@ -34,7 +54,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     const isAdmin = session.user.role === "ADMIN";
 
-    if (!blog || (!isAdmin && blog.authorId.toString() !== session.user.id)) {
+    // Normalize stored author id (handle populated author objects)
+    const blogAuthorId = blog?.authorId && (blog.authorId._id ? String(blog.authorId._id) : String(blog.authorId));
+
+    if (!blog || (!isAdmin && blogAuthorId !== session.user.id)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -73,7 +96,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       .populate('categoryId', 'name')
       .populate('tags', 'name');
 
-    return NextResponse.json(updatedBlog);
+    // attach latest likeCount after update
+    const updatedObj = updatedBlog?.toObject ? updatedBlog.toObject() : updatedBlog;
+    const likeCount = await Like.countDocuments({ blogId: updatedBlog._id });
+
+    return NextResponse.json({ ...updatedObj, likeCount });
   } catch (error) {
     console.error('Error updating blog:', error);
     return NextResponse.json({ error: "Failed to update blog" }, { status: 500 });
@@ -91,11 +118,15 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
     const isAdmin = session.user.role === "ADMIN";
 
-    if (!blog || (!isAdmin && blog.authorId.toString() !== session.user.id)) {
+    const blogAuthorId = blog?.authorId && (blog.authorId._id ? String(blog.authorId._id) : String(blog.authorId));
+
+    if (!blog || (!isAdmin && blogAuthorId !== session.user.id)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Delete blog and associated likes
     await Blog.findByIdAndDelete(id);
+    await Like.deleteMany({ blogId: id });
 
     return NextResponse.json({ message: "Blog deleted" });
   } catch (error) {

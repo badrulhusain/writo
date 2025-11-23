@@ -28,14 +28,17 @@ export async function POST(
     if (existingLike) {
       // Unlike: remove the like
       await Like.findByIdAndDelete(existingLike._id);
-      return NextResponse.json({ liked: false, message: "Unliked" });
+      // return updated count
+      const likeCount = await Like.countDocuments({ blogId: new mongoose.Types.ObjectId(blogId) });
+      return NextResponse.json({ liked: false, message: "Unliked", likeCount });
     } else {
       // Like: create new like
       await Like.create({
         userId,
         blogId: new mongoose.Types.ObjectId(blogId)
       });
-      return NextResponse.json({ liked: true, message: "Liked" });
+      const likeCount = await Like.countDocuments({ blogId: new mongoose.Types.ObjectId(blogId) });
+      return NextResponse.json({ liked: true, message: "Liked", likeCount });
     }
   } catch (error) {
     console.error('Error toggling like:', error);
