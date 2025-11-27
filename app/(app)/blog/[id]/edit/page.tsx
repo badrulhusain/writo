@@ -109,7 +109,7 @@ const EditBlogPost = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto mt-8 p-6 bg-white shadow-md rounded-lg">
+    <div className="max-w-4xl mx-auto mt-8 p-6  shadow-sm shadow-white rounded-lg">
       <h1 className="text-3xl font-bold mb-6">Edit Blog Post</h1>
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
