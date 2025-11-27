@@ -35,7 +35,20 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       console.warn('Could not determine current user like state:', e);
     }
 
-    return NextResponse.json({ ...blogObj, likeCount, likedByCurrentUser });
+    // Determine if the current user is the author (server-side trust)
+    let isOwner = false;
+    try {
+      const session = await auth();
+      if (session && session.user && session.user.id) {
+        const blogAuthorId = blog?.authorId && (blog.authorId._id ? String(blog.authorId._id) : String(blog.authorId));
+        isOwner = String(session.user.id) === String(blogAuthorId);
+      }
+    } catch (e) {
+      // If auth fails, default to false (not owner)
+      console.warn('Could not determine owner state:', e);
+    }
+
+    return NextResponse.json({ ...blogObj, likeCount, likedByCurrentUser, isOwner });
   } catch (error) {
     console.error('Error fetching blog:', error);
     return NextResponse.json({ error: "Failed to fetch blog" }, { status: 500 });
