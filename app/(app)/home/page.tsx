@@ -35,6 +35,7 @@ interface BlogPost {
   createdAt: string;
   status: string;
   likeCount?: number;
+  userLiked?: boolean;
   featuredImage?: {
     url: string;
     alt: string;
@@ -66,6 +67,9 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedTag, setSelectedTag] = useState("All");
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [page, setPage] = useState<number>(1);
+  const [limit] = useState<number>(8);
+  const [total, setTotal] = useState<number | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [trendingTags, setTrendingTags] = useState<Tag[]>([]);
   const [trendingUsers, setTrendingUsers] = useState<TrendingUser[]>([]);
@@ -73,22 +77,30 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [page]);
 
   const fetchData = async () => {
     try {
+      setLoading(true);
+      const blogsUrl = `/api/blogs?page=${page}&limit=${limit}`;
       const [blogsRes, categoriesRes, tagsRes, usersRes] = await Promise.all([
-        fetch("/api/blogs"),
+        fetch(blogsUrl),
         fetch("/api/categories"),
         fetch("/api/tags"),
         fetch("/api/users")
       ]);
 
       if (blogsRes.ok) {
-        // The /api/blogs endpoint now includes likeCount aggregated server-side,
-        // so we can directly use the returned blogs without extra per-blog requests.
-        const blogs = await blogsRes.json();
-        setBlogPosts(blogs);
+        const blogsJson = await blogsRes.json();
+        // If server returned paginated shape
+        if (blogsJson && Array.isArray(blogsJson.blogs)) {
+          setBlogPosts(blogsJson.blogs);
+          setTotal(blogsJson.total ?? null);
+        } else if (Array.isArray(blogsJson)) {
+          // Backwards compatible response
+          setBlogPosts(blogsJson);
+          setTotal(null);
+        }
       }
 
       if (categoriesRes.ok) {
@@ -109,6 +121,33 @@ export default function HomePage() {
       console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  
+
+  const handleLike = async (blogId: string) => {
+    try {
+      const response = await fetch(`/api/blogs/${blogId}/like`, {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setBlogPosts(posts =>
+          posts.map(post =>
+            post._id === blogId
+              ? {
+                  ...post,
+                  userLiked: result.liked,
+                  likeCount: (post.likeCount || 0) + (result.liked ? 1 : -1)
+                }
+              : post
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error toggling like:", error);
     }
   };
 
@@ -218,10 +257,28 @@ export default function HomePage() {
         {/* Main Content */}
         <div className="lg:col-span-3 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">Latest Articles</h2>
-            <Button variant="ghost" asChild>
-              <Link href="/blog">View All</Link>
-            </Button>
+            <div className="flex items-center gap-4">
+              <h2 className="text-2xl font-bold">Latest Articles</h2>
+              <div className="text-sm text-muted-foreground">
+                Page {page}{total ? ` of ${Math.max(1, Math.ceil(total / limit))}` : ""}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}>
+                Prev
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setPage(p => p + 1)}
+                disabled={total !== null ? page * limit >= total : false}
+              >
+                Next
+              </Button>
+              <Button variant="ghost" asChild>
+                <Link href="/blog">View All</Link>
+              </Button>
+            </div>
           </div>
 
           <div className="grid gap-6">
@@ -261,10 +318,15 @@ export default function HomePage() {
                       <span className="font-medium">{post.authorId.name}</span>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Heart className="h-4 w-4" />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleLike(post._id)}
+                        className={`p-1 h-8 ${post.userLiked ? 'text-red-500' : ''}`}
+                      >
+                        <Heart className={`mr-1 h-4 w-4 ${post.userLiked ? 'fill-current' : ''}`} />
                         {post.likeCount || 0}
-                      </span>
+                      </Button>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-4">
