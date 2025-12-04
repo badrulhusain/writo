@@ -20,17 +20,12 @@ export const {
   },
   events: {
     async linkAccount({ user }) {
-      // Connect to database
-      await connectDB();
       // In a real implementation, you would update the user in MongoDB here
       console.log("Linking account for user:", user.id);
     }
   },
   callbacks: {
     async signIn({ user, account }) {
-      // Connect to database
-      await connectDB();
-      
       // Allow OAuth without email verification
       if (account?.provider !== "credentials") return true;
 
@@ -47,7 +42,7 @@ export const {
 
           // Delete two factor confirmation for next sign in
           // In a real implementation, you would delete from MongoDB here
-          console.log("Deleting two factor confirmation:", twoFactorConfirmation.id);
+          console.log("Deleting two factor confirmation:", twoFactorConfirmation._id.toString());
         }
       }
 

@@ -148,13 +148,15 @@ export default function HomePage() {
               <div className="absolute inset-0 bg-black/40"></div>
             </div>
           )}
-          <div className="relative z-10 max-w-2xl">
+          <div className="relative z-10 max-w-2xl flex flex-col justify-between md:min-h-[400px]">
+            <div >
             <Badge className="mb-4 flex items-center gap-1">
               <Sparkles className="h-4 w-4" />
               Featured Post
             </Badge>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white">{featuredPost.title}</h1>
-            <p className="text-lg text-gray-200 mb-6">{featuredPost.content.substring(0, 200)}...</p>
+            <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white">{featuredPost.title}</h1></div>
+            {/* <p className="text-lg text-gray-200 mb-6">{featuredPost.content.substring(0, 200)}...</p> */}
+           <div>
             <div className="flex flex-wrap items-center gap-4 mb-6">
               <div className="flex items-center gap-2">
                 <Avatar className="h-8 w-8">
@@ -167,9 +169,10 @@ export default function HomePage() {
                 {new Date(featuredPost.createdAt).toLocaleDateString()}
               </span>
             </div>
-            <Button asChild>
+
+            <Button asChild className="w-[170px]">
               <Link href={`/blog/${featuredPost._id}`}>Read Article</Link>
-            </Button>
+            </Button></div>
           </div>
           {!featuredPost.featuredImage && (
             <div className="absolute top-0 right-0 bottom-0 w-1/3 bg-gradient-to-l from-primary/20 to-transparent"></div>

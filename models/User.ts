@@ -21,7 +21,7 @@ const UserSchema = new mongoose.Schema<IUser>({
   email: { type: String, unique: true, sparse: true },
   emailVerified: { type: Date },
   image: { type: String },
-  password: { type: String },
+  password: { type: String, select: false },
   role: { type: String, enum: ["ADMIN", "USER"], default: "USER" },
   isTwoFactorEnabled: { type: Boolean, default: false },
   bio: { type: String },
