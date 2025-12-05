@@ -228,7 +228,7 @@ export default function BlogDetailPage() {
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-3">
             <Avatar>
-              <AvatarImage src={ undefined} />
+              <AvatarImage src={undefined} />
               <AvatarFallback>{blogPost.authorId.name?.charAt(0) || 'U'}</AvatarFallback>
             </Avatar>
             <div>
@@ -253,7 +253,7 @@ export default function BlogDetailPage() {
       </Card>
 
       {/* Blog Content */}
-      <div className="prose prose-lg max-w-none dark:prose-invert">
+      <div className="prose prose-lg max-w-none dark:prose-invert [&_ol]:list-decimal [&_ul]:list-disc [&_li]:ml-4 [&_h1]:text-4xl [&_h2]:text-3xl [&_h3]:text-2xl [&_h1]:font-bold [&_h2]:font-bold [&_h3]:font-bold">
         <div dangerouslySetInnerHTML={{ __html: blogPost.content }} />
       </div>
 

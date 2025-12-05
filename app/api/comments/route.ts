@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import Comment from "@/models/Comment";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/Auth";
 
 // POST /api/comments - Create a new comment
 export async function POST(req: NextRequest) {
   try {
     await dbConnect();
     
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session || !session.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
+import { connectDB } from "@/lib/db";
 import Bookmark from "@/models/Bookmark";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/Auth";
 
 // POST /api/bookmarks - Add a bookmark
 export async function POST(req: NextRequest) {
   try {
-    await dbConnect();
+    await connectDB();
     
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session || !session.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -45,9 +44,9 @@ export async function POST(req: NextRequest) {
 // DELETE /api/bookmarks?blogId={id} - Remove a bookmark
 export async function DELETE(req: NextRequest) {
   try {
-    await dbConnect();
+    await connectDB()
     
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session || !session.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -78,9 +77,9 @@ export async function DELETE(req: NextRequest) {
 // GET /api/bookmarks?blogId={id} - Check if a blog is bookmarked by the user
 export async function GET(req: NextRequest) {
   try {
-    await dbConnect();
+    await connectDB();
     
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session || !session.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

@@ -4,7 +4,7 @@
  * @type {string[]}
  */
 export const publicRoutes = [
-  // Removed "/" to make home page require authentication
+  "/",
   "/auth/new-verification"
 ];
 

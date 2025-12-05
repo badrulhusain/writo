@@ -6,12 +6,16 @@ import mongoose from "mongoose";
 export async function GET() {
   try {
     await connectDB();
+    const session = await auth();
+    const userId = session?.user?.id ? new mongoose.Types.ObjectId(session.user.id) : null;
+
     const blogs = await Blog.find({ status: "published" })
       .populate('authorId', 'name email')
       .populate('categoryId', 'name')
       .populate('tags', 'name')
       .sort({ createdAt: -1 });
-    // Aggregate like counts for the returned blogs to avoid N+1 requests from the client
+
+    // Aggregate like counts
     const blogIds = blogs.map((b: any) => b._id);
     const likeCounts = await Like.aggregate([
       { $match: { blogId: { $in: blogIds } } },
@@ -23,14 +27,27 @@ export async function GET() {
       likeMap.set(String(lc._id), lc.count);
     });
 
-    // Attach likeCount to each blog object
+    // Get user likes if authenticated
+    const userLikesSet = new Set<string>();
+    if (userId) {
+      const userLikes = await Like.find({ 
+        userId, 
+        blogId: { $in: blogIds } 
+      });
+      userLikes.forEach((like: any) => {
+        userLikesSet.add(String(like.blogId));
+      });
+    }
+
+    // Attach likeCount and userLiked to each blog object
     const blogsWithLikes = blogs.map((blog: any) => ({
       ...blog.toObject ? blog.toObject() : blog,
       likeCount: likeMap.get(String(blog._id)) || 0,
+      userLiked: userLikesSet.has(String(blog._id))
     }));
+
     console.log(`Fetched ${blogs.length} published blogs`);
-    blogs.forEach(blog => console.log(`Blog: ${blog.title} - Status: ${blog.status}`));
-  return NextResponse.json(blogsWithLikes);
+    return NextResponse.json(blogsWithLikes);
   } catch (error) {
     console.error('Error fetching blogs:', error);
     return NextResponse.json({ error: "Failed to fetch blogs" }, { status: 500 });
