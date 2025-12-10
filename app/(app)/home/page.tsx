@@ -1,23 +1,16 @@
-"use client";
+import { connectDB, Blog, Category, Tag, User, Like } from "@/lib/db";
+import { auth } from "@/Auth";
+import mongoose from "mongoose";
+import HomeClient from "./components/HomeClient";
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Search,
-  Calendar,
-  Eye,
-  MessageCircle,
-  Heart,
-  Sparkles,
-  TrendingUp,
-  Clock
-} from "lucide-react";
-import Link from "next/link";
+// Helper to fetch data directly from DB
+async function getData() {
+  try {
+    await connectDB();
+    const session = await auth();
+    const userId = session?.user?.id ? new mongoose.Types.ObjectId(session.user.id) : null;
 
+<<<<<<< HEAD
 interface BlogPost {
   _id: string;
   title: string;
@@ -43,17 +36,28 @@ interface BlogPost {
     photographerUrl: string;
   };
 }
+=======
+    // 1. Fetch Blogs
+    const blogs = await Blog.find({ status: "published" })
+      .populate('authorId', 'name email')
+      .populate('categoryId', 'name')
+      .populate('tags', 'name')
+      .sort({ createdAt: -1 });
+>>>>>>> home
 
-interface Category {
-  name: string;
-  count: number;
-}
+    // Aggregate like counts
+    const blogIds = blogs.map((b: any) => b._id);
+    const likeCounts = await Like.aggregate([
+      { $match: { blogId: { $in: blogIds } } },
+      { $group: { _id: "$blogId", count: { $sum: 1 } } }
+    ]);
 
-interface Tag {
-  name: string;
-  count: number;
-}
+    const likeMap = new Map<string, number>();
+    likeCounts.forEach((lc: any) => {
+      likeMap.set(String(lc._id), lc.count);
+    });
 
+<<<<<<< HEAD
 interface TrendingUser {
   _id: string;
   name?: string;
@@ -121,9 +125,21 @@ export default function HomePage() {
       console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
+=======
+    // Get user likes if authenticated
+    const userLikesSet = new Set<string>();
+    if (userId) {
+      const userLikes = await Like.find({ 
+        userId, 
+        blogId: { $in: blogIds } 
+      });
+      userLikes.forEach((like: any) => {
+        userLikesSet.add(String(like.blogId));
+      });
+>>>>>>> home
     }
-  };
 
+<<<<<<< HEAD
   
 
   const handleLike = async (blogId: string) => {
@@ -159,20 +175,166 @@ export default function HomePage() {
     const matchesTag = selectedTag === "All" || post.tags.some(tag => tag.name === selectedTag);
     return matchesSearch && matchesCategory && matchesTag;
   });
+=======
+    // Serialize blogs
+    const serializedBlogs = blogs.map((blog: any) => ({
+      _id: blog._id.toString(),
+      title: blog.title,
+      content: blog.content,
+      authorId: {
+        name: blog.authorId?.name || "Unknown",
+        email: blog.authorId?.email || "",
+      },
+      categoryId: blog.categoryId ? { name: blog.categoryId.name } : undefined,
+      tags: blog.tags.map((t: any) => ({ name: t.name })),
+      createdAt: blog.createdAt.toISOString(),
+      formattedDate: new Date(blog.createdAt).toLocaleDateString('en-GB'),
+      status: blog.status,
+      featuredImage: blog.featuredImage ? {
+        url: blog.featuredImage.url,
+        alt: blog.featuredImage.alt,
+        photographer: blog.featuredImage.photographer,
+        photographerUrl: blog.featuredImage.photographerUrl,
+      } : undefined,
+      likeCount: likeMap.get(String(blog._id)) || 0,
+      userLiked: userLikesSet.has(String(blog._id))
+    }));
+>>>>>>> home
 
-  // Featured post is the most recent post
-  const featuredPost = filteredPosts[0];
-  const regularPosts = filteredPosts.slice(1);
+    // 2. Fetch Categories
+    const categories = await Category.aggregate([
+      {
+        $lookup: {
+          from: "blogs",
+          localField: "_id",
+          foreignField: "categoryId",
+          as: "blogs"
+        }
+      },
+      {
+        $addFields: {
+          count: { $size: "$blogs" }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          name: 1,
+          count: 1
+        }
+      },
+      {
+        $sort: { count: -1 }
+      }
+    ]);
 
-  if (loading) {
-    return (
-      <div className="space-y-8">
-        <div className="text-center py-8">Loading...</div>
-      </div>
-    );
+    // 3. Fetch Tags
+    const tags = await Tag.aggregate([
+      {
+        $lookup: {
+          from: "blogs",
+          localField: "_id",
+          foreignField: "tags",
+          as: "blogs"
+        }
+      },
+      {
+        $addFields: {
+          count: { $size: "$blogs" }
+        }
+      },
+      {
+        $match: {
+          count: { $gt: 0 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          name: 1,
+          count: 1
+        }
+      },
+      {
+        $sort: { count: -1 }
+      },
+      {
+        $limit: 10
+      }
+    ]);
+
+    // 4. Fetch Users
+    const users = await User.aggregate([
+      {
+        $lookup: {
+          from: "blogs",
+          localField: "_id",
+          foreignField: "authorId",
+          as: "blogs"
+        }
+      },
+      {
+        $addFields: {
+          publishedBlogsCount: {
+            $size: {
+              $filter: {
+                input: "$blogs",
+                as: "blog",
+                cond: { $eq: ["$$blog.status", "published"] }
+              }
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          publishedBlogsCount: { $gt: 0 }
+        }
+      },
+      {
+        $sort: { publishedBlogsCount: -1 }
+      },
+      {
+        $limit: 10
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          email: 1,
+          image: 1,
+          publishedBlogsCount: 1
+        }
+      }
+    ]);
+    
+    const serializedUsers = users.map((u: any) => ({
+      ...u,
+      _id: u._id.toString()
+    }));
+
+    return {
+      blogs: serializedBlogs,
+      categories,
+      tags,
+      users: serializedUsers
+    };
+  } catch (error) {
+    console.error("Error fetching home data:", error);
+    return {
+      blogs: [],
+      categories: [],
+      tags: [],
+      users: []
+    };
   }
+}
+
+export default async function HomePage() {
+  const data = await getData();
 
   return (
+<<<<<<< HEAD
     <div className="space-y-8">
       {/* Hero Section */}
       {featuredPost && (
@@ -430,5 +592,13 @@ export default function HomePage() {
         </div>
       </div>
     </div>
+=======
+    <HomeClient
+      initialBlogs={data.blogs}
+      initialCategories={data.categories}
+      initialTags={data.tags}
+      initialUsers={data.users}
+    />
+>>>>>>> home
   );
 }

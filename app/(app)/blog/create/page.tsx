@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { AITools } from "@/components/ai-tools";
+import { RichTextEditor } from "./components/RichTextEditor";
 
 export default function CreateBlogPage() {
   const router = useRouter();
@@ -170,12 +171,10 @@ export default function CreateBlogPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="content">Content</Label>
-                <Textarea
-                  id="content"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                <RichTextEditor
+                  content={content}
+                  onChange={setContent}
                   placeholder="Write your blog post content here..."
-                  className="min-h-[400px]"
                 />
               </div>
             </CardContent>

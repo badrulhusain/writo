@@ -91,6 +91,7 @@ const DATA = {
   },
 };
 
+
 export function DockDemo() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-background to-secondary/10 dark:from-background dark:to-secondary/20">
@@ -99,57 +100,14 @@ export function DockDemo() {
           WRITO
         </span>
       </div>
-      <p className="text-lg md:text-xl text-muted-foreground max-w-md md:max-w-xl text-center mb-16 px-4">
-        Unlock Your Blogging Potential with AI
-      </p>
-      <TooltipProvider>
-        <Dock direction="middle" className="fixed bottom-8 left-1/2 transform -translate-x-1/2">
-          {DATA.navbar.map((item) => (
-            <DockIcon key={item.label}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link
-                    href={item.href}
-                    aria-label={item.label}
-                    className={cn(
-                      buttonVariants({ variant: "ghost", size: "icon" }),
-                      "size-12 rounded-full",
-                    )}
-                  >
-                    <item.icon className="size-4" />
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{item.label}</p>
-                </TooltipContent>
-              </Tooltip>
-            </DockIcon>
-          ))}
-          <Separator orientation="vertical" className="h-full" />
-          {Object.entries(DATA.contact.social).map(([name, social]) => (
-            <DockIcon key={name}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Link
-                    href={social.url}
-                    aria-label={social.name}
-                    className={cn(
-                      buttonVariants({ variant: "ghost", size: "icon" }),
-                      "size-12 rounded-full",
-                    )}
-                  >
-                    <social.icon className="size-4" />
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{name}</p>
-                </TooltipContent>
-              </Tooltip>
-            </DockIcon>
-          ))}
-        </Dock>
-      </TooltipProvider>
-    </div>
+        <p className="text-lg md:text-xl text-muted-foreground max-w-md md:max-w-xl text-center mb-8 px-4">
+          Unlock Your Blogging Potential with AI
+        </p>
+        <Link href="/home" className={cn(buttonVariants({ variant: "default", size: "lg" }))}>
+          Start Reading
+        </Link>
+      </div>
+  
   );
 }
 

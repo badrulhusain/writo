@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 export async function GET(req: Request) {
   try {
     await connectDB();
+<<<<<<< HEAD
     const url = new URL(req.url);
     const pageParam = url.searchParams.get("page");
     const limitParam = url.searchParams.get("limit");
@@ -14,11 +15,18 @@ export async function GET(req: Request) {
 
     // If pagination params provided, apply skip/limit
     const query = Blog.find({ status: "published" })
+=======
+    const session = await auth();
+    const userId = session?.user?.id ? new mongoose.Types.ObjectId(session.user.id) : null;
+
+    const blogs = await Blog.find({ status: "published" })
+>>>>>>> home
       .populate('authorId', 'name email')
       .populate('categoryId', 'name')
       .populate('tags', 'name')
       .sort({ createdAt: -1 });
 
+<<<<<<< HEAD
     let blogs: any[];
     let total = 0;
     if (page && limit) {
@@ -28,6 +36,9 @@ export async function GET(req: Request) {
       blogs = await query.exec();
     }
     // Aggregate like counts for the returned blogs to avoid N+1 requests from the client
+=======
+    // Aggregate like counts
+>>>>>>> home
     const blogIds = blogs.map((b: any) => b._id);
     const likeCounts = await Like.aggregate([
       { $match: { blogId: { $in: blogIds } } },
@@ -39,12 +50,27 @@ export async function GET(req: Request) {
       likeMap.set(String(lc._id), lc.count);
     });
 
-    // Attach likeCount to each blog object
+    // Get user likes if authenticated
+    const userLikesSet = new Set<string>();
+    if (userId) {
+      const userLikes = await Like.find({ 
+        userId, 
+        blogId: { $in: blogIds } 
+      });
+      userLikes.forEach((like: any) => {
+        userLikesSet.add(String(like.blogId));
+      });
+    }
+
+    // Attach likeCount and userLiked to each blog object
     const blogsWithLikes = blogs.map((blog: any) => ({
       ...blog.toObject ? blog.toObject() : blog,
       likeCount: likeMap.get(String(blog._id)) || 0,
+      userLiked: userLikesSet.has(String(blog._id))
     }));
+
     console.log(`Fetched ${blogs.length} published blogs`);
+<<<<<<< HEAD
     blogs.forEach(blog => console.log(`Blog: ${blog.title} - Status: ${blog.status}`));
 
     // If pagination was used return a structured response
@@ -53,6 +79,8 @@ export async function GET(req: Request) {
     }
 
     // Backwards compatible: return array when no pagination params
+=======
+>>>>>>> home
     return NextResponse.json(blogsWithLikes);
   } catch (error) {
     console.error('Error fetching blogs:', error);

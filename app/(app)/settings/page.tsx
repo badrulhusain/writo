@@ -6,10 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import {
-  User,
-  Mail,
   Bell,
   Palette,
   Shield,
@@ -19,9 +16,6 @@ import { settings } from "@/actions/settings";
 import { toast } from "sonner";
 
 export default function SettingsPage() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [bio, setBio] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -40,21 +34,6 @@ export default function SettingsPage() {
     setEmailNotifications(savedEmailNotifications);
     setNewsletter(savedNewsletter);
   }, []);
-
-  const handleSaveProfile = () => {
-    startTransition(() => {
-      settings({
-        name,
-        bio,
-      }).then((data) => {
-        if (data.error) {
-          toast.error(data.error);
-        } else if (data.success) {
-          toast.success(data.success);
-        }
-      });
-    });
-  };
 
   const handleUpdatePassword = () => {
     if (newPassword !== confirmPassword) {
@@ -101,35 +80,6 @@ export default function SettingsPage() {
 
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile</CardTitle>
-              <CardDescription>
-                Update your personal information and profile details.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="your.email@example.com" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell us about yourself" />
-              </div>
-              <Button onClick={handleSaveProfile} disabled={isPending}>
-                <Save className="mr-2 h-4 w-4" />
-                {isPending ? "Saving..." : "Save Changes"}
-              </Button>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader>
               <CardTitle>Preferences</CardTitle>

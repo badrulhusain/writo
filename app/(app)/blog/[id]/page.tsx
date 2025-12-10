@@ -19,6 +19,8 @@ import {
   TrendingUp
 } from "lucide-react";
 import Link from "next/link";
+import Comments from "@/components/Comments";
+import ShareButton from "@/components/ShareButton";
 
 interface BlogPost {
   id: string;
@@ -42,6 +44,13 @@ interface BlogPost {
   }[];
 }
 
+// Function to calculate reading time
+function calculateReadingTime(content: string): number {
+  const wordsPerMinute = 200;
+  const wordCount = content.replace(/<[^>]*>/g, '').split(/\s+/).length;
+  return Math.ceil(wordCount / wordsPerMinute);
+}
+
 export default function BlogDetailPage() {
   const params = useParams();
   const id = params.id as string;
@@ -51,6 +60,7 @@ export default function BlogDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const [viewCount, setViewCount] = useState(0);
 
   useEffect(() => {
     const fetchBlog = async () => {
@@ -73,12 +83,95 @@ export default function BlogDetailPage() {
     }
   }, [id]);
 
+  // Record view and get view count
+  useEffect(() => {
+    const recordView = async () => {
+      try {
+        // Record the view
+        const response = await fetch("/api/views", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ blogId: id }),
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setViewCount(data.viewCount);
+        }
+        
+        // Also get the current view count
+        const viewResponse = await fetch(`/api/views?blogId=${id}`);
+        if (viewResponse.ok) {
+          const viewData = await viewResponse.json();
+          setViewCount(viewData.viewCount);
+        }
+      } catch (err) {
+        console.error("Failed to record/view count:", err);
+      }
+    };
+
+    if (id) {
+      recordView();
+    }
+  }, [id]);
+
+  // Check if the blog is bookmarked
+  useEffect(() => {
+    const checkBookmarkStatus = async () => {
+      try {
+        const response = await fetch(`/api/bookmarks?blogId=${id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setBookmarked(data.isBookmarked);
+        }
+      } catch (err) {
+        console.error("Failed to check bookmark status:", err);
+      }
+    };
+
+    if (id) {
+      checkBookmarkStatus();
+    }
+  }, [id]);
+
   const handleLike = () => {
     setLiked(!liked);
   };
 
-  const handleBookmark = () => {
-    setBookmarked(!bookmarked);
+  const handleBookmark = async () => {
+    try {
+      if (bookmarked) {
+        // Remove bookmark
+        const response = await fetch(`/api/bookmarks?blogId=${id}`, {
+          method: "DELETE",
+        });
+        
+        if (response.ok) {
+          setBookmarked(false);
+        } else {
+          console.error("Failed to remove bookmark");
+        }
+      } else {
+        // Add bookmark
+        const response = await fetch("/api/bookmarks", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ blogId: id }),
+        });
+        
+        if (response.ok) {
+          setBookmarked(true);
+        } else {
+          console.error("Failed to add bookmark");
+        }
+      }
+    } catch (err) {
+      console.error("Error toggling bookmark:", err);
+    }
   };
 
   if (loading) {
@@ -108,6 +201,8 @@ export default function BlogDetailPage() {
     );
   }
 
+  const readingTime = calculateReadingTime(blogPost.content);
+
   return (
     <div className="space-y-8">
       {/* Blog Header */}
@@ -120,11 +215,11 @@ export default function BlogDetailPage() {
           </span>
           <span className="flex items-center gap-1">
             <Clock className="h-4 w-4" />
-            {Math.ceil(blogPost.content.length / 1000)} min read
+            {readingTime} min read
           </span>
           <span className="flex items-center gap-1">
             <Eye className="h-4 w-4" />
-            0 views
+            {viewCount} views
           </span>
         </div>
 
@@ -133,7 +228,7 @@ export default function BlogDetailPage() {
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-3">
             <Avatar>
-              <AvatarImage src={ undefined} />
+              <AvatarImage src={undefined} />
               <AvatarFallback>{blogPost.authorId.name?.charAt(0) || 'U'}</AvatarFallback>
             </Avatar>
             <div>
@@ -158,7 +253,7 @@ export default function BlogDetailPage() {
       </Card>
 
       {/* Blog Content */}
-      <div className="prose prose-lg max-w-none dark:prose-invert">
+      <div className="prose prose-lg max-w-none dark:prose-invert [&_ol]:list-decimal [&_ul]:list-disc [&_li]:ml-4 [&_h1]:text-4xl [&_h2]:text-3xl [&_h3]:text-2xl [&_h1]:font-bold [&_h2]:font-bold [&_h3]:font-bold">
         <div dangerouslySetInnerHTML={{ __html: blogPost.content }} />
       </div>
 
@@ -193,9 +288,7 @@ export default function BlogDetailPage() {
           <Button variant="ghost" size="sm" onClick={handleBookmark}>
             <Bookmark className={`h-5 w-5 ${bookmarked ? "fill-current" : ""}`} />
           </Button>
-          <Button variant="ghost" size="sm">
-            <Share2 className="h-5 w-5" />
-          </Button>
+          <ShareButton title={blogPost.title} url={`/blog/${id}`} />
         </div>
       </div>
 
@@ -214,68 +307,7 @@ export default function BlogDetailPage() {
       </div>
 
       {/* Comments Section */}
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold">Comments (0)</h2>
-        
-        <div className="space-y-6">
-          {/* Comment input */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex gap-4">
-                <Avatar>
-                  <AvatarImage src="https://github.com/shadcn.png" />
-                  <AvatarFallback>U</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <textarea 
-                    placeholder="Write a comment..." 
-                    className="w-full min-h-[100px] p-3 border rounded-md resize-none"
-                  />
-                  <div className="flex justify-end mt-3">
-                    <Button>Post Comment</Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Sample comments */}
-          {[1, 2, 3].map((item) => (
-            <Card key={item}>
-              <CardContent className="pt-6">
-                <div className="flex gap-4">
-                  <Avatar>
-                    <AvatarImage src={`https://i.pravatar.cc/150?img=${item}`} />
-                    <AvatarFallback>U{item}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-medium">User {item}</h4>
-                      <span className="text-sm text-muted-foreground">
-                        {item === 1 ? "2 hours ago" : item === 2 ? "1 day ago" : "3 days ago"}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-muted-foreground">
-                      {item === 1 
-                        ? "Great article! The section on AI writing assistants was particularly helpful." 
-                        : item === 2 
-                        ? "I've been working on a similar project. Would love to see more examples of implementation." 
-                        : "Thanks for sharing. The best practices section is spot on."}
-                    </p>
-                    <div className="flex items-center gap-4 mt-3">
-                      <Button variant="ghost" size="sm">
-                        <ThumbsUp className="h-4 w-4 mr-1" />
-                        {item * 3}
-                      </Button>
-                      <Button variant="ghost" size="sm">Reply</Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+      <Comments blogId={id} />
     </div>
   );
 }

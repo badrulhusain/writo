@@ -3,7 +3,7 @@ import { connectDB, User } from "@/lib/db";
 export const getUserByEmail = async (email: string) => {
   try {
     await connectDB();
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select('+password');
 
     if (!user) return null;
     
