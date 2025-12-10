@@ -8,10 +8,6 @@ export const getPasswordResetTokenByToken = async (token: string) => {
   try {
     await connectDB();
     const passwordResetToken = await PasswordResetToken.findOne({ token });
-<<<<<<< HEAD
-
-=======
->>>>>>> home
     return passwordResetToken ? passwordResetToken.toObject() : null;
   } catch (error) {
     console.error("Error fetching password reset token by token:", error);

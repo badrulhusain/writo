@@ -35,8 +35,8 @@ export function ModernLayout({ children }: ModernLayoutProps) {
 
   const navigation = [
     { name: "Home", href: "/home", icon: HomeIcon },
-    { name: "Images", href: "/images", icon: ImageIcon },
-    { name: "Posts", href: "/blog", icon: FileText },
+
+
     { name: "Create Post", href: "/blog/create", icon: Sparkles },
     ...(user?.role === "ADMIN"
       ? [{ name: "Admin", href: "/admin", icon: ShieldCheck }]

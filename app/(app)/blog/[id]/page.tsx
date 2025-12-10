@@ -193,7 +193,7 @@ export default function BlogDetailPage() {
             <h2 className="text-xl font-semibold mb-2">Error</h2>
             <p className="text-muted-foreground">{error || 'Blog not found'}</p>
             <Button asChild className="mt-4">
-              <Link href="/blog">Back to Blogs</Link>
+              <Link href="/profile">Back to Blogs</Link>
             </Button>
           </CardContent>
         </Card>

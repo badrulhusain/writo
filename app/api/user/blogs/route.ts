@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
     // Use lean() for better performance when you don't need Mongoose documents
     const blogs = await Blog.find({ authorId: session.user.id })
-      .select('title content status createdAt likeCount') // Only select needed fields
+      .select('title content status createdAt likeCount featuredImage') // Only select needed fields
       .populate('authorId', 'name email')
       .populate('categoryId', 'name')
       .populate('tags', 'name')
