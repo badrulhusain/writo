@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { connectDB, Blog, Category, Tag, User, Like } from "@/lib/db";
 import { auth } from "@/Auth";
 import mongoose from "mongoose";

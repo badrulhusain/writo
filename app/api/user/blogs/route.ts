@@ -1,4 +1,4 @@
-import { connectDB, Blog, Category, Tag } from "@/lib/db";
+import { connectDB, Blog, Category, Tag, Like } from "@/lib/db";
 import { auth } from "@/Auth";
 import { NextResponse } from "next/server";
 
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
     // Use lean() for better performance when you don't need Mongoose documents
     const blogs = await Blog.find({ authorId: session.user.id })
-      .select('title content status createdAt likeCount featuredImage') // Only select needed fields
+      .select('title content status createdAt featuredImage') // Only select needed fields
       .populate('authorId', 'name email')
       .populate('categoryId', 'name')
       .populate('tags', 'name')
@@ -34,7 +34,11 @@ export async function GET(request: Request) {
     const draftPosts = blogs.filter(blog => blog.status === 'draft').length;
 
     // Calculate total likes (simplified - would need aggregation in real app)
-    const totalLikes = blogs.reduce((sum, blog) => sum + (blog.likeCount || 0), 0);
+    // Calculate total likes by counting documents in the Like collection for these blogs
+    const blogIds = blogs.map(b => b._id);
+    const totalLikes = await Like.countDocuments({ 
+      blogId: { $in: blogIds } 
+    });
 
     return NextResponse.json({
       blogs,

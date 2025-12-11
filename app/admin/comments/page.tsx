@@ -104,7 +104,7 @@ export default function AdminComments() {
                   <div>
                     <p className="font-medium">{comment.authorId?.name || "Unknown"}</p>
                     <p className="text-sm text-muted-foreground">
-                      on "{comment.blogId?.title || "Unknown post"}"
+                      on &quot;{comment.blogId?.title || "Unknown post"}&quot;
                     </p>
                   </div>
                   <span className="text-sm text-muted-foreground">

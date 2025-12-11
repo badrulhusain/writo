@@ -54,7 +54,7 @@ export const newPassword = async (
   );
 
   // Delete password reset token
-  await PasswordResetToken.findByIdAndDelete(existingToken.id);
+  await PasswordResetToken.findByIdAndDelete(existingToken._id);
 
   return { success: "Password updated!" };
 };

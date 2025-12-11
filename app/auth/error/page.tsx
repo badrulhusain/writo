@@ -1,8 +1,11 @@
+import { Suspense } from "react";
 import { ErrorCard } from "@/components/auth/error-card";
 
 const AuthErrorPage = () => {
   return ( 
-    <ErrorCard />
+    <Suspense fallback={<div>Loading...</div>}>
+      <ErrorCard />
+    </Suspense>
   );
 };
  

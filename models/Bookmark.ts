@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 interface IBookmark {
   userId: mongoose.Types.ObjectId;
   blogId: mongoose.Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const BookmarkSchema = new mongoose.Schema<IBookmark>({

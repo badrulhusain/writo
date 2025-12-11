@@ -4,7 +4,6 @@ import {
   Account, 
   VerificationToken 
 } from "@/models";
-import { any } from "zod";
 
 export function MongoDBAdapter(): Adapter {
   return {
@@ -17,7 +16,7 @@ export function MongoDBAdapter(): Adapter {
         const savedUser = await newUser.save();
         return {
           ...savedUser.toObject(),
-          id: savedUser._id.toString(),
+          id: (savedUser._id as any).toString(),
           emailVerified: savedUser.emailVerified ? savedUser.emailVerified.toISOString() : null,
         } as AdapterUser;
       } catch (error) {
@@ -32,7 +31,7 @@ export function MongoDBAdapter(): Adapter {
         if (!user) return null;
         return {
           ...user.toObject(),
-          id: user._id.toString(),
+          id: (user._id as any).toString(),
           emailVerified: user.emailVerified ? user.emailVerified.toISOString() : null,
         } as AdapterUser;
       } catch (error) {
@@ -47,7 +46,7 @@ export function MongoDBAdapter(): Adapter {
         if (!user) return null;
         return {
           ...user.toObject(),
-          id: user._id.toString(),
+          id: (user._id as any).toString(),
           emailVerified: user.emailVerified ? user.emailVerified.toISOString() : null,
         } as AdapterUser;
       } catch (error) {
@@ -61,10 +60,10 @@ export function MongoDBAdapter(): Adapter {
         const account = await Account.findOne({ providerAccountId, provider }).populate('userId');
         if (!account || !account.userId) return null;
         
-        const user = account.userId;
+        const user = account.userId as any;
         return {
           ...user.toObject(),
-          id: user._id.toString(),
+          id: (user._id as any).toString(),
           emailVerified: user.emailVerified ? user.emailVerified.toISOString() : null,
         } as AdapterUser;
       } catch (error) {
@@ -88,7 +87,7 @@ export function MongoDBAdapter(): Adapter {
         
         return {
           ...updatedUser.toObject(),
-          id: updatedUser._id.toString(),
+          id: (updatedUser._id as any).toString(),
           emailVerified: updatedUser.emailVerified ? updatedUser.emailVerified.toISOString() : null,
         } as AdapterUser;
       } catch (error) {
@@ -131,7 +130,7 @@ export function MongoDBAdapter(): Adapter {
       return session as AdapterSession;
     },
 
-    async getSessionAndUser(sessionToken: string) {
+    async getSessionAndUser(_sessionToken: string) {
       // For JWT strategy, we don't need to implement this
       return null;
     },
@@ -141,7 +140,7 @@ export function MongoDBAdapter(): Adapter {
       return session as AdapterSession;
     },
 
-    async deleteSession(sessionToken: string) {
+    async deleteSession(_sessionToken: string) {
       // For JWT strategy, we don't need to implement this
     },
 
@@ -151,7 +150,7 @@ export function MongoDBAdapter(): Adapter {
         const savedToken = await verificationToken.save();
         return {
           ...savedToken.toObject(),
-          id: savedToken._id.toString(),
+          id: (savedToken._id as any).toString(),
         };
       } catch (error) {
         console.error("Error creating verification token:", error);
@@ -170,7 +169,7 @@ export function MongoDBAdapter(): Adapter {
         
         return {
           ...verificationToken.toObject(),
-          id: verificationToken._id.toString(),
+          id: (verificationToken._id as any).toString(),
         };
       } catch (error) {
         console.error("Error using verification token:", error);

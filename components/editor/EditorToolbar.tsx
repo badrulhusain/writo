@@ -43,6 +43,7 @@ interface EditorToolbarProps {
   editor: Editor | null;
 }
 
+// eslint-disable-next-line complexity
 export function EditorToolbar({ editor }: EditorToolbarProps) {
   const [imageUrl, setImageUrl] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");

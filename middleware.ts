@@ -11,8 +11,8 @@ import {
 const { auth } = NextAuth(authConfig);
 
 // Helper function to create route matchers (similar to Clerk's createRouteMatcher)
-const createRouteMatcher = (routes) => {
-  return (req) => routes.includes(req.nextUrl.pathname);
+const createRouteMatcher = (routes: any) => {
+  return (req: any) => routes.includes(req.nextUrl.pathname);
 };
 
 const isPublicRoute = createRouteMatcher(publicRoutes);

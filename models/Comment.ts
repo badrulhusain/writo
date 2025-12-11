@@ -6,6 +6,8 @@ interface IComment {
   blogId: mongoose.Types.ObjectId;
   parentId?: mongoose.Types.ObjectId; // For threaded replies
   status: "pending" | "approved" | "rejected";
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const CommentSchema = new mongoose.Schema<IComment>({

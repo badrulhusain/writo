@@ -92,7 +92,7 @@ const DATA = {
 };
 
 
-export function DockDemo() {
+function DockDemo() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-background to-secondary/10 dark:from-background dark:to-secondary/20">
       <div className="w-full items-center flex justify-center mb-12">
