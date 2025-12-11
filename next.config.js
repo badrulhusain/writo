@@ -1,17 +1,44 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['images.unsplash.com'], // Add your image domains here
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com', // Google OAuth profile images
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com', // GitHub OAuth profile images
+      },
+    ],
     formats: ['image/avif', 'image/webp'],
   },
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
-  // `swcMinify` is not recognized in newer Next.js versions; remove to avoid warnings during build/deploy.
-  // Enable response compression
+  // Production optimizations
+  swcMinify: true,
+  // Reduce bundle size by transforming imports
+  modularizeImports: {
+    'lucide-react': {
+      transform: 'lucide-react/dist/esm/icons/{{member}}',
+    },
+    'react-icons/fi': {
+        transform: 'react-icons/fi/{{member}}',
+    },
+    'react-icons/fa': {
+        transform: 'react-icons/fa/{{member}}',
+    },
+    // Add other icon sets if used
+  },
+  // Add optimizePackageImports for DEV performance (fewer modules compiled)
   experimental: {
     optimizeCss: true,
-    // turbo: true,
+    optimizePackageImports: ['lucide-react', 'date-fns', 'lodash', 'recharts'],
   }
 }
 
