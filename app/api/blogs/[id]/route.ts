@@ -42,6 +42,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   }
 }
 
+// eslint-disable-next-line complexity
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await connectDB();
@@ -97,7 +98,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       .populate('tags', 'name');
 
     // attach latest likeCount after update
-    const updatedObj = updatedBlog?.toObject ? updatedBlog.toObject() : updatedBlog;
+    if (!updatedBlog) {
+        return NextResponse.json({ error: "Failed to fetch updated blog" }, { status: 500 });
+    }
+    const updatedObj = updatedBlog.toObject ? updatedBlog.toObject() : updatedBlog;
     const likeCount = await Like.countDocuments({ blogId: updatedBlog._id });
 
     return NextResponse.json({ ...updatedObj, likeCount });

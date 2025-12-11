@@ -10,10 +10,11 @@ if (!MONGODB_URI) {
 let cached: {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
-} = {
-  conn: null,
-  promise: null,
-};
+} = (global as any).mongoose;
+
+if (!cached) {
+  cached = (global as any).mongoose = { conn: null, promise: null };
+}
 
 export async function connectToDatabase() {
   if (cached.conn) {

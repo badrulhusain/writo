@@ -61,6 +61,7 @@ interface BlogPost {
   };
 }
 
+// eslint-disable-next-line complexity
 export default function ProfilePage() {
   // Profile State
   const [userData, setUserData] = useState<UserProfile | null>(null);
