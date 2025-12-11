@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "c:/Users/muhsi/Music/writo/components/ui/card";
-import { Badge } from "c:/Users/muhsi/Music/writo/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "c:/Users/muhsi/Music/writo/components/ui/avatar";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Calendar,
   Clock,
@@ -19,8 +19,8 @@ import {
   TrendingUp
 } from "lucide-react";
 import Link from "next/link";
-import Comments from "c:/Users/muhsi/Music/writo/components/Comments";
-import ShareButton from "c:/Users/muhsi/Music/writo/components/ShareButton";
+import Comments from "@/components/Comments";
+import ShareButton from "@/components/ShareButton";
 
 interface BlogPost {
   id: string;
