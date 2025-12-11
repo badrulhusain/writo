@@ -21,7 +21,7 @@ const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   // Production optimizations
-  swcMinify: true,
+  // swcMinify is default in Next.js 15
   // Reduce bundle size by transforming imports
   modularizeImports: {
     'lucide-react': {
