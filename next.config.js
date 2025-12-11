@@ -37,7 +37,6 @@ const nextConfig = {
   },
   // Add optimizePackageImports for DEV performance (fewer modules compiled)
   experimental: {
-    optimizeCss: true,
     optimizePackageImports: ['lucide-react', 'date-fns', 'lodash', 'recharts'],
   }
 }
