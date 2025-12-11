@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Button } from "c:/Users/muhsi/Music/writo/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "c:/Users/muhsi/Music/writo/components/ui/card";
 import { Badge } from "c:/Users/muhsi/Music/writo/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "c:/Users/muhsi/Music/writo/components/ui/avatar";
