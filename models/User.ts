@@ -14,6 +14,8 @@ interface IUser extends Document {
   accounts?: mongoose.Types.ObjectId[];
   twoFactorConfirmation?: mongoose.Types.ObjectId;
   blogs?: mongoose.Types.ObjectId[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const UserSchema = new mongoose.Schema<IUser>({

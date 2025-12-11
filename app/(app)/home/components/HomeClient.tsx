@@ -280,7 +280,7 @@ export default function HomeClient({
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">Latest Articles</h2>
             <Button variant="ghost" asChild>
-              <Link href="/blog">View All</Link>
+              <Link href="/profile">View All</Link>
             </Button>
           </div>
 

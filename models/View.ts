@@ -5,6 +5,8 @@ interface IView {
   userId?: mongoose.Types.ObjectId; // Optional for authenticated users
   ipAddress?: string; // For anonymous users
   userAgent?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const ViewSchema = new mongoose.Schema<IView>({

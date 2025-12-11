@@ -21,7 +21,7 @@ import {
   getTwoFactorConfirmationByUserId
 } from "@/data/two-factor-confirmation";
 
-const verifyTwoFactorCode = async (user: any, code: string) => {
+const verifyTwoFactorCode = async (user: any, code: string): Promise<{ error?: string; success?: string }> => {
   const twoFactorToken = await getTwoFactorTokenByEmail(user.email);
 
   if (!twoFactorToken) {
@@ -52,10 +52,10 @@ const verifyTwoFactorCode = async (user: any, code: string) => {
     userId: user.id,
   });
 
-  return { success: true };
+  return { success: "Two factor successful!" };
 };
 
-const sendTwoFactorToken = async (email: string) => {
+const sendTwoFactorToken = async (email: string): Promise<{ twoFactor?: boolean; error?: string }> => {
   const twoFactorToken = await generateTwoFactorToken(email);
   await sendTwoFactorTokenEmail(
     twoFactorToken.email,
@@ -67,7 +67,7 @@ const sendTwoFactorToken = async (email: string) => {
 export const login = async (
   values: z.infer<typeof LoginSchema>,
   callbackUrl?: string | null,
-) => {
+): Promise<{ error?: string; success?: string; twoFactor?: boolean } | undefined> => {
   const validatedFields = LoginSchema.safeParse(values);
 
   if (!validatedFields.success) {

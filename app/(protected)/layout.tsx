@@ -1,6 +1,6 @@
 "use client";
 
-import { Navbar } from "./_components/navbar";
+import Navbar from "@/components/Navbar";
 import { SessionProvider } from 'next-auth/react';
 
 // Separate component that uses the session

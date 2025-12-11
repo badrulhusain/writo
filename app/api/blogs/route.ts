@@ -3,7 +3,7 @@ import { auth } from "@/Auth";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     await connectDB();
     const session = await auth();

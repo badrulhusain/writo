@@ -13,6 +13,8 @@ interface IBlog {
     photographer?: string;
     photographerUrl?: string;
   };
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const BlogSchema = new mongoose.Schema<IBlog>({

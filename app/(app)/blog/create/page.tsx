@@ -83,7 +83,7 @@ export default function CreateBlogPage() {
       if (response.ok) {
         const blog = await response.json();
         console.log("Draft saved:", blog);
-        router.push("/blog"); // Redirect to blog list
+        router.push("/profile"); // Redirect to blog list
       } else {
         const error = await response.json();
         console.error("Error saving draft:", error);
@@ -129,7 +129,7 @@ export default function CreateBlogPage() {
       if (response.ok) {
         const blog = await response.json();
         console.log("Blog saved:", blog);
-        router.push("/blog"); // Redirect to blog list
+        router.push("/profile"); // Redirect to blog list
       } else {
         const error = await response.json();
         console.error("Error saving blog:", error);
