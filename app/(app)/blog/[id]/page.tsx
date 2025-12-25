@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -11,12 +11,10 @@ import {
   Clock,
   Eye,
   MessageCircle,
-  Share2,
   Bookmark,
   ThumbsUp,
   Sparkles,
   Lightbulb,
-  TrendingUp
 } from "lucide-react";
 import Link from "next/link";
 import Comments from "@/components/Comments";
@@ -95,12 +93,12 @@ export default function BlogDetailPage() {
           },
           body: JSON.stringify({ blogId: id }),
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           setViewCount(data.viewCount);
         }
-        
+
         // Also get the current view count
         const viewResponse = await fetch(`/api/views?blogId=${id}`);
         if (viewResponse.ok) {
@@ -147,7 +145,7 @@ export default function BlogDetailPage() {
         const response = await fetch(`/api/bookmarks?blogId=${id}`, {
           method: "DELETE",
         });
-        
+
         if (response.ok) {
           setBookmarked(false);
         } else {
@@ -162,7 +160,7 @@ export default function BlogDetailPage() {
           },
           body: JSON.stringify({ blogId: id }),
         });
-        
+
         if (response.ok) {
           setBookmarked(true);
         } else {
@@ -283,7 +281,7 @@ export default function BlogDetailPage() {
             0 Comments
           </Button>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={handleBookmark}>
             <Bookmark className={`h-5 w-5 ${bookmarked ? "fill-current" : ""}`} />
