@@ -45,7 +45,7 @@ const EditBlogPost = () => {
           setBlog(data);
           setTitle(data.title);
           setContent(data.content);
-        } catch (parseError) {
+        } catch {
           throw new Error('Invalid JSON response from server');
         }
       } catch (err: any) {
@@ -83,11 +83,11 @@ const EditBlogPost = () => {
       }
       
       try {
-        const data = JSON.parse(text);
+        JSON.parse(text);
         setTitleError('');
         setContentError('');
         router.push(`/blog/${params.id}`);
-      } catch (parseError) {
+      } catch {
         throw new Error('Invalid JSON response from server');
       }
     } catch (error: any) {

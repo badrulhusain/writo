@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -116,10 +117,12 @@ export function UnsplashImagePicker({ onImageSelect, selectedImage, onClose }: U
           <div className="border rounded-lg p-4 bg-muted/50">
             <h4 className="font-medium mb-2">Selected Image:</h4>
             <div className="flex items-center gap-4">
-              <img
+              <Image
                 src={selectedImageState.thumb}
                 alt={selectedImageState.alt}
                 className="w-20 h-20 object-cover rounded"
+                width={80}
+                height={80}
               />
               <div className="flex-1">
                 <p className="text-sm text-muted-foreground">{selectedImageState.alt}</p>
@@ -169,10 +172,12 @@ export function UnsplashImagePicker({ onImageSelect, selectedImage, onClose }: U
                 }`}
                 onClick={() => handleImageSelect(image)}
               >
-                <img
+                <Image
                   src={image.thumb}
                   alt={image.alt}
                   className="w-full h-32 object-cover"
+                  width={300}
+                  height={200}
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">

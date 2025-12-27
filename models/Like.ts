@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 interface ILike {
   userId: mongoose.Types.ObjectId;
   blogId: mongoose.Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const LikeSchema = new mongoose.Schema<ILike>({

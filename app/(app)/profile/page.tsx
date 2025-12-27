@@ -1,31 +1,23 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
-  Camera,
-  Mail,
-  User,
   Calendar,
+  Heart,
+  Share2,
+  Search,
+  Plus,
+  Settings,
   MapPin,
-  Link as LinkIcon,
-  Save,
-  Key
+  Link as LinkIcon
 } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { settings } from "@/actions/settings";
+import Link from "next/link";
 import { toast } from "sonner";
 
 interface UserProfile {
@@ -46,18 +38,46 @@ interface UserStats {
   following: number;
 }
 
+interface BlogPost {
+  _id: string;
+  title: string;
+  content: string;
+  authorId: {
+    name: string;
+    email: string;
+  };
+  categoryId?: {
+    name: string;
+  };
+  tags: Array<{
+    name: string;
+  }>;
+  createdAt: string;
+  status: string;
+  likeCount?: number;
+  userLiked?: boolean;
+  featuredImage?: {
+    url: string;
+    alt: string;
+  };
+}
+
+// eslint-disable-next-line complexity
 export default function ProfilePage() {
+  // Profile State
   const [userData, setUserData] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<UserStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [name, setName] = useState("");
-  const [bio, setBio] = useState("");
-  const [location, setLocation] = useState("");
-  const [website, setWebsite] = useState("");
-  const [isPending, startTransition] = useTransition();
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  // Blog State
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [blogsLoading, setBlogsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filter, setFilter] = useState<"all" | "published" | "drafts">("all");
 
   useEffect(() => {
     fetchProfile();
+    fetchBlogs();
   }, []);
 
   const fetchProfile = async () => {
@@ -67,42 +87,99 @@ export default function ProfilePage() {
         const data = await response.json();
         setUserData(data.user);
         setStats(data.stats);
-        setName(data.user.name);
-        setBio(data.user.bio);
-        setLocation(data.user.location);
-        setWebsite(data.user.website);
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
     } finally {
-      setLoading(false);
+      setProfileLoading(false);
     }
   };
 
-  const handleSaveProfile = () => {
-    startTransition(() => {
-      settings({
-        name,
-        bio,
-        location,
-        website,
-      }).then((data) => {
-        if (data.error) {
-          toast.error(data.error);
-        } else if (data.success) {
-          toast.success(data.success);
-          fetchProfile(); // Refresh data
-        }
+  const fetchBlogs = async () => {
+    try {
+      const response = await fetch("/api/user/blogs");
+      if (response.ok) {
+        const data = await response.json();
+        const blogs = data.blogs;
+        // Fetch like data for each blog
+        const blogsWithLikes = await Promise.all(
+          blogs.map(async (blog: BlogPost) => {
+            try {
+              const likeResponse = await fetch(`/api/blogs/${blog._id}/like`);
+              if (likeResponse.ok) {
+                const likeData = await likeResponse.json();
+                return { ...blog, likeCount: likeData.likeCount, userLiked: likeData.userLiked };
+              }
+            } catch (error) {
+              console.error("Error fetching likes for blog:", blog._id, error);
+            }
+            return blog;
+          })
+        );
+        setBlogPosts(blogsWithLikes);
+      }
+    } catch (error) {
+      console.error("Error fetching blogs:", error);
+    } finally {
+      setBlogsLoading(false);
+    }
+  };
+
+  const handleLike = async (blogId: string) => {
+    try {
+      const response = await fetch(`/api/blogs/${blogId}/like`, {
+        method: "POST",
       });
+
+      if (response.ok) {
+        const result = await response.json();
+        setBlogPosts(posts =>
+          posts.map(post =>
+            post._id === blogId
+              ? {
+                  ...post,
+                  userLiked: result.liked,
+                  likeCount: (post.likeCount || 0) + (result.liked ? 1 : -1)
+                }
+              : post
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error toggling like:", error);
+    }
+  };
+
+  const handleShare = async (blogId: string, title: string) => {
+    const url = `${window.location.origin}/blog/${blogId}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, url });
+      } catch (error) {
+        console.error("Error sharing:", error);
+        copyToClipboard(url);
+      }
+    } else {
+      copyToClipboard(url);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast.success("Link copied to clipboard!");
     });
   };
 
-  const handleChangePassword = () => {
-    // Redirect to settings page for password change
-    window.location.href = "/settings";
-  };
+  const filteredPosts = blogPosts.filter(post => {
+    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         post.content.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filter === "all" ||
+                         (filter === "published" && post.status === "published") ||
+                         (filter === "drafts" && post.status === "draft");
+    return matchesSearch && matchesFilter;
+  });
 
-  if (loading) {
+  if (profileLoading) {
     return <div className="text-center py-8">Loading profile...</div>;
   }
 
@@ -111,167 +188,208 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Profile</h1>
-        <p className="text-muted-foreground">Manage your profile information and settings</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Profile Card */}
-        <div className="lg:col-span-1 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Picture</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center gap-4">
-               <div className="relative">
-                 <Avatar className="h-32 w-32">
-                   <AvatarImage src={userData.avatar} />
-                   <AvatarFallback>{userData.name.charAt(0)}</AvatarFallback>
-                 </Avatar>
-                 <Button
-                   size="sm"
-                   className="absolute bottom-0 right-0 rounded-full p-2 h-8 w-8"
-                 >
-                   <Camera className="h-4 w-4" />
-                 </Button>
-               </div>
-               <Button variant="outline" className="w-full">
-                 Change Picture
-               </Button>
-             </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Stats</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Posts</span>
-                <span className="font-medium">{stats?.posts || 0}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Followers</span>
-                <span className="font-medium">{stats?.followers || 0}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Following</span>
-                <span className="font-medium">{stats?.following || 0}</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Profile Information */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>Update your personal information</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="name" 
-                      value={name} 
-                      onChange={(e) => setName(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
+    <div className="space-y-8">
+      {/* Profile Header Card */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row gap-6 items-start">
+            <Avatar className="h-24 w-24 border-4 border-background shadow-sm">
+              <AvatarImage src={userData.avatar} />
+              <AvatarFallback className="text-2xl">{userData.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+            
+            <div className="flex-1 space-y-2">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h1 className="text-2xl font-bold">{userData.name}</h1>
+                  <p className="text-muted-foreground">{userData.email}</p>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      value={userData.email}
-                      disabled
-                      className="pl-10"
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea 
-                  id="bio" 
-                  value={bio} 
-                  onChange={(e) => setBio(e.target.value)}
-                  placeholder="Tell us about yourself"
-                  className="min-h-[120px]"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="location" 
-                      value={location} 
-                      onChange={(e) => setLocation(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="website">Website</Label>
-                  <div className="relative">
-                    <LinkIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      id="website" 
-                      value={website} 
-                      onChange={(e) => setWebsite(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <Button onClick={handleSaveProfile} disabled={isPending}>
-                  <Save className="h-4 w-4 mr-2" />
-                  {isPending ? "Saving..." : "Save Changes"}
-                </Button>
-                <Button variant="outline" onClick={handleChangePassword}>
-                  <Key className="h-4 w-4 mr-2" />
-                  Change Password
+                <Button variant="outline" asChild>
+                  <Link href="/settings">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Edit Profile
+                  </Link>
                 </Button>
               </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Account Information</CardTitle>
-              <CardDescription>Details about your account</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Account Type</span>
-                <Badge variant={userData.role === "ADMIN" ? "default" : "secondary"}>
-                  {userData.role}
-                </Badge>
+              {userData.bio && (
+                <p className="text-sm max-w-2xl">{userData.bio}</p>
+              )}
+
+              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground pt-2">
+                {userData.location && (
+                  <div className="flex items-center">
+                    <MapPin className="mr-1 h-3 w-3" />
+                    {userData.location}
+                  </div>
+                )}
+                {userData.website && (
+                  <div className="flex items-center">
+                    <LinkIcon className="mr-1 h-3 w-3" />
+                    <a href={userData.website} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                      {userData.website.replace(/^https?:\/\//, '')}
+                    </a>
+                  </div>
+                )}
+                <div className="flex items-center">
+                  <Calendar className="mr-1 h-3 w-3" />
+                  Joined {new Date(userData.createdAt).toLocaleDateString()}
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Member Since</span>
-                <span>{new Date(userData.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}</span>
+
+              <div className="flex gap-6 py-2">
+                <div className="flex flex-col items-center">
+                  <span className="font-bold text-lg">{stats?.posts || 0}</span>
+                  <span className="text-xs text-muted-foreground">Posts</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="font-bold text-lg">{stats?.followers || 0}</span>
+                  <span className="text-xs text-muted-foreground">Followers</span>
+                </div>
+                 <div className="flex flex-col items-center">
+                  <span className="font-bold text-lg">{stats?.following || 0}</span>
+                  <span className="text-xs text-muted-foreground">Following</span>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <h2 className="text-xl font-bold">My Blogs</h2>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative w-full md:max-w-sm">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search posts..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+               <button
+                onClick={() => setFilter("all")}
+                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  filter === "all" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
+                }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setFilter("published")}
+                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  filter === "published" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
+                }`}
+              >
+                Published
+              </button>
+              <button
+                onClick={() => setFilter("drafts")}
+                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  filter === "drafts" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
+                }`}
+              >
+                Drafts
+              </button>
+            </div>
+             <Button asChild>
+              <Link href="/blog/create">
+                <Plus className="mr-2 h-4 w-4" />
+                New Post
+              </Link>
+            </Button>
+          </div>
         </div>
+
+        {blogsLoading ? (
+          <div className="text-center py-8">Loading blogs...</div>
+        ) : filteredPosts.length === 0 ? (
+          <div className="text-center py-12 border rounded-lg border-dashed">
+            <p className="text-muted-foreground mb-4">No blog posts found.</p>
+            <Button asChild variant="outline">
+              <Link href="/blog/create">Create your first post</Link>
+            </Button>
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredPosts.map((post) => (
+              <Card key={post._id} className="flex flex-col overflow-hidden">
+                {post.featuredImage && (
+                  <div className="relative h-48 w-full">
+                    <Image 
+                      src={post.featuredImage.url} 
+                      alt={post.featuredImage.alt || post.title}
+                      className="w-full h-full object-cover"
+                      width={400}
+                      height={200}
+                    />
+                    <div className="absolute top-2 right-2">
+                      <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
+                        {post.status}
+                      </Badge>
+                    </div>
+                  </div>
+                )}
+                <CardHeader className={post.featuredImage ? "pt-4" : ""}>
+                  {!post.featuredImage && (
+                    <div className="flex justify-end mb-2">
+                      <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
+                        {post.status}
+                      </Badge>
+                    </div>
+                  )}
+                  <CardTitle className="line-clamp-1">{post.title}</CardTitle>
+                  <CardDescription className="line-clamp-2">
+                    {post.content.replace(/<[^>]*>?/gm, '').substring(0, 150)}...
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1">
+                  <div className="flex items-center text-sm text-muted-foreground mt-1">
+                    <Calendar className="mr-1 h-4 w-4" />
+                    {new Date(post.createdAt).toLocaleDateString()}
+                  </div>
+                  {post.categoryId && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Category: {post.categoryId.name}
+                    </div>
+                  )}
+                </CardContent>
+                <CardFooter className="flex justify-between items-center border-t pt-4">
+                  <div className="flex items-center space-x-3 text-sm text-muted-foreground">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleLike(post._id)}
+                      className={`p-1 h-8 ${post.userLiked ? 'text-red-500' : ''}`}
+                    >
+                      <Heart className={`mr-1 h-4 w-4 ${post.userLiked ? 'fill-current' : ''}`} />
+                      {post.likeCount || 0}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleShare(post._id, post.title)}
+                      className="p-1 h-8"
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/blog/${post._id}/edit`}>Edit</Link>
+                    </Button>
+                    <Button variant="default" size="sm" asChild>
+                      <Link href={`/blog/${post._id}`}>View</Link>
+                    </Button>
+                  </div>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

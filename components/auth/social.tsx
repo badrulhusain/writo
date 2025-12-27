@@ -1,6 +1,6 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { useSignIn } from "@clerk/nextjs";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
 import { useSearchParams } from "next/navigation";
@@ -9,12 +9,19 @@ import { Button } from "@/components/ui/button";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 
 export const Social = () => {
+  const { signIn } = useSignIn();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
 
   const onClick = (provider: "google" | "github") => {
-    signIn(provider, {
-      callbackUrl: callbackUrl || DEFAULT_LOGIN_REDIRECT,
+    if (!signIn) return;
+
+    const strategy = provider === "google" ? "oauth_google" : "oauth_github";
+    
+    signIn.authenticateWithRedirect({
+      strategy,
+      redirectUrl: "/sso-callback",
+      redirectUrlComplete: callbackUrl || DEFAULT_LOGIN_REDIRECT,
     });
   }
 

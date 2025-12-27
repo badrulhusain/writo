@@ -1,68 +1,52 @@
-import NextAuth from "next-auth";
-import { NextResponse } from 'next/server';
-import authConfig from "@/auth.config";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import {
   DEFAULT_LOGIN_REDIRECT,
   apiAuthPrefix,
   authRoutes,
   publicRoutes,
 } from "@/routes";
-
-const { auth } = NextAuth(authConfig);
-
-// Helper function to create route matchers (similar to Clerk's createRouteMatcher)
-const createRouteMatcher = (routes) => {
-  return (req) => routes.includes(req.nextUrl.pathname);
-};
+import { NextResponse } from "next/server";
 
 const isPublicRoute = createRouteMatcher(publicRoutes);
 const isAuthRoute = createRouteMatcher(authRoutes);
 
-export default auth((req) => {
+export default clerkMiddleware(async (auth, req) => {
+  const { userId } = await auth();
   const { nextUrl } = req;
-  const isLoggedIn = !!req.auth;
-  
-  const currentUrl = new URL(req.url);
-  const isApiAuthRoute = currentUrl.pathname.startsWith(apiAuthPrefix);
-  const isAccessingDefaultRedirect = currentUrl.pathname === DEFAULT_LOGIN_REDIRECT;
 
-  // Skip middleware for API auth routes
+  const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
+
+  // 1. If it's an API auth route (like /api/auth/...), let it pass (though we might not need this with Clerk)
   if (isApiAuthRoute) {
-    return NextResponse.next();
+      return; 
   }
 
-  // If user is logged in and accessing an auth route (like login/register)
-  if (isLoggedIn && isAuthRoute(req)) {
-    return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+  // 2. If user is logged in and trying to access an auth route (login/register), redirect to dashboard
+  if (userId && isAuthRoute(req)) {
+      return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
   }
 
-  // If user is not logged in
-  if (!isLoggedIn) {
-    // If user is trying to access a protected route (including home page)
-    if (!isPublicRoute(req) && !isAuthRoute(req)) {
-      let callbackUrl = nextUrl.pathname;
-      if (nextUrl.search) {
-        callbackUrl += nextUrl.search;
-      }
-
-      const encodedCallbackUrl = encodeURIComponent(callbackUrl);
-      
-      return NextResponse.redirect(new URL(
-        `/auth/login?callbackUrl=${encodedCallbackUrl}`,
-        nextUrl
-      ));
-    }
+  // 3. If user is logged in and trying to access the landing page (which is public), redirect to dashboard?
+  // NOTE: The previous logic redirected logged-in users from public routes to dashboard.
+  // We'll keep that behavior for the root path '/' if that was the intent, OR strictly follow the "public routes" check.
+  // The previous legacy middleware said: 
+  // "If user is logged in and accessing a public route, redirect to dashboard"
+  // This is often annoying (e.g. can't view landing page), so cautiously:
+  if (userId && nextUrl.pathname === "/") {
+     return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
   }
-
-  // If user is logged in and accessing a public route, redirect to dashboard
-  if (isLoggedIn && isPublicRoute(req)) {
-    return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+  
+  // 4. Protect all routes that are not public and not auth routes
+  if (!isPublicRoute(req) && !isAuthRoute(req)) {
+      await auth.protect();
   }
-
-  return NextResponse.next();
 });
 
-// Optionally, don't invoke Middleware on some paths
 export const config = {
-  matcher: ['/((?!.+\\.[\\w]+$|_next).*)', '/', '/(api|trpc)(.*)'],
+  matcher: [
+    // Skip Next.js internals and all static files, unless found in search params
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
+  ],
 };

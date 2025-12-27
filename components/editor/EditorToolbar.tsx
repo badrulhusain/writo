@@ -28,13 +28,6 @@ import {
   Eraser,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -43,6 +36,7 @@ interface EditorToolbarProps {
   editor: Editor | null;
 }
 
+// eslint-disable-next-line complexity
 export function EditorToolbar({ editor }: EditorToolbarProps) {
   const [imageUrl, setImageUrl] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");

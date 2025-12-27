@@ -1,5 +1,5 @@
 import { connectToDatabase, mongoose } from './mongodb';
-import { User, Blog, Category, Tag, BlogTag, Like, Account, VerificationToken, PasswordResetToken, TwoFactorToken, TwoFactorConfirmation } from '@/models';
+import { User, Blog, Category, Tag, BlogTag, Like } from '@/models';
 
 // Re-export the robust connection function
 export const connectDB = connectToDatabase;
@@ -11,12 +11,7 @@ export {
   Category,
   Tag,
   BlogTag,
-  Like,
-  Account,
-  VerificationToken,
-  PasswordResetToken,
-  TwoFactorToken,
-  TwoFactorConfirmation
+  Like
 };
 
 // Export mongoose for direct use if needed

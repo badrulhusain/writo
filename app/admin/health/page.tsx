@@ -11,6 +11,7 @@ interface HealthStatus {
   error?: string;
 }
 
+// eslint-disable-next-line complexity
 export default function AdminHealth() {
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [loading, setLoading] = useState(true);

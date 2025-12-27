@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,8 +84,8 @@ export default function HomeClient({
   const [selectedTag, setSelectedTag] = useState("All");
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>(initialBlogs);
   const [categories, setCategories] = useState<Category[]>(initialCategories);
-  const [trendingTags, setTrendingTags] = useState<Tag[]>(initialTags);
-  const [trendingUsers, setTrendingUsers] = useState<TrendingUser[]>(initialUsers);
+  const [trendingTags] = useState<Tag[]>(initialTags);
+  const [trendingUsers] = useState<TrendingUser[]>(initialUsers);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -196,10 +197,12 @@ export default function HomeClient({
         <div className="relative rounded-xl overflow-hidden bg-gradient-to-r from-primary/10 to-secondary/10 p-8 md:p-12">
           {featuredPost.featuredImage && (
             <div className="absolute inset-0">
-              <img
+              <Image
                 src={featuredPost.featuredImage.url}
                 alt={featuredPost.featuredImage.alt}
                 className="w-full h-full object-cover"
+                width={1200}
+                height={600}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
             </div>
@@ -280,7 +283,7 @@ export default function HomeClient({
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">Latest Articles</h2>
             <Button variant="ghost" asChild>
-              <Link href="/blog">View All</Link>
+              <Link href="/profile">View All</Link>
             </Button>
           </div>
 
@@ -289,10 +292,12 @@ export default function HomeClient({
               <Card key={post._id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden border-muted">
                 {post.featuredImage && (
                   <div className="relative h-56 overflow-hidden">
-                    <img
+                    <Image
                       src={post.featuredImage.url}
                       alt={post.featuredImage.alt}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      width={600}
+                      height={400}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>

@@ -1,7 +1,6 @@
 "use client";
 
-import { Navbar } from "./_components/navbar";
-import { SessionProvider } from 'next-auth/react';
+import Navbar from "@/components/Navbar";
 
 // Separate component that uses the session
 const ProtectedLayoutContent = ({ children }: { children: React.ReactNode; }) => {
@@ -21,11 +20,9 @@ interface ProtectedLayoutProps {
 
 const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
   return ( 
-    <SessionProvider>
-      <ProtectedLayoutContent>
-        {children}
-      </ProtectedLayoutContent>
-    </SessionProvider>
+    <ProtectedLayoutContent>
+      {children}
+    </ProtectedLayoutContent>
    );
 };
  

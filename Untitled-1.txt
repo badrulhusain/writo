@@ -1,0 +1,39 @@
+"use client";
+import { useRouter } from "next/navigation";
+import { useCurrentUser } from "@/hooks/use-current-user";
+
+export default function EditDeleteControls({ blog }: { blog: any }) {
+  const router = useRouter();
+  const user = useCurrentUser();
+
+  // blog.authorId might be populated object or just id
+  const authorId = blog?.authorId?._id ?? blog?.authorId ?? blog?.authorId?.toString?.();
+  const isAuthor = user?.id && user.id === String(authorId);
+  const isAdmin = user?.role === "ADMIN";
+
+  if (!isAuthor && !isAdmin) return null;
+
+  async function handleDelete() {
+    if (!confirm("Delete this blog? This action cannot be undone.")) return;
+    const res = await fetch(`/api/blogs/${blog._id}`, { method: "DELETE" });
+    if (res.ok) {
+      router.push("/blog"); // or '/dashboard'
+    } else {
+      const json = await res.json().catch(() => ({}));
+      alert(json?.error ?? "Failed to delete post");
+    }
+  }
+
+  function handleEdit() {
+    // Option: route to a dedicated edit page
+    router.push(`/blog/${blog._id}/edit`);
+    // Or open an edit modal and call PUT `/api/blogs/${blog._id}` with updated data.
+  }
+
+  return (
+    <div className="flex gap-2">
+      <button onClick={handleEdit} className="btn btn-primary">Edit</button>
+      <button onClick={handleDelete} className="btn btn-danger">Delete</button>
+    </div>
+  );
+}

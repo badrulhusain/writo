@@ -6,13 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   FileText,
-  Users,
-  TrendingUp,
-  Calendar,
   Plus,
   BarChart3,
   Eye,
-  MessageCircle,
   Heart,
   Search,
   Filter
@@ -120,7 +116,7 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Here's what's happening with your blog.</p>
+          <p className="text-muted-foreground">Welcome back! Here&apos;s what&apos;s happening with your blog.</p>
         </div>
         <Button asChild>
           <Link href="/blog/create">

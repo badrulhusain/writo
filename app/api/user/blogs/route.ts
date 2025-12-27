@@ -1,14 +1,25 @@
-import { connectDB, Blog, Category, Tag } from "@/lib/db";
-import { auth } from "@/Auth";
+import { connectDB, Blog, Like, User } from "@/lib/db";
+import { currentUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   try {
-    await connectDB();
-    const session = await auth();
+    const user = await currentUser();
+    if (!user || !user.emailAddresses?.[0]?.emailAddress) {
+       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    if (!session || !session.user || !session.user.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    await connectDB();
+    let dbUser = await User.findOne({ email: user.emailAddresses[0].emailAddress });
+    
+    if (!dbUser) {
+      // Sync on demand
+      dbUser = await User.create({
+        name: user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : user.username || "User",
+        email: user.emailAddresses[0].emailAddress,
+        image: user.imageUrl,
+        role: "USER",
+      });
     }
 
     // Get pagination parameters from URL
@@ -18,8 +29,8 @@ export async function GET(request: Request) {
     const skip = (page - 1) * limit;
 
     // Use lean() for better performance when you don't need Mongoose documents
-    const blogs = await Blog.find({ authorId: session.user.id })
-      .select('title content status createdAt likeCount') // Only select needed fields
+    const blogs = await Blog.find({ authorId: dbUser._id })
+      .select('title content status createdAt featuredImage') // Only select needed fields
       .populate('authorId', 'name email')
       .populate('categoryId', 'name')
       .populate('tags', 'name')
@@ -34,7 +45,11 @@ export async function GET(request: Request) {
     const draftPosts = blogs.filter(blog => blog.status === 'draft').length;
 
     // Calculate total likes (simplified - would need aggregation in real app)
-    const totalLikes = blogs.reduce((sum, blog) => sum + (blog.likeCount || 0), 0);
+    // Calculate total likes by counting documents in the Like collection for these blogs
+    const blogIds = blogs.map(b => b._id);
+    const totalLikes = await Like.countDocuments({ 
+      blogId: { $in: blogIds } 
+    });
 
     return NextResponse.json({
       blogs,

@@ -8,6 +8,8 @@ interface IAuditLog {
   details?: string;
   ipAddress?: string;
   userAgent?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const AuditLogSchema = new mongoose.Schema<IAuditLog>({

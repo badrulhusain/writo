@@ -1,20 +1,33 @@
 import { connectDB, User } from "@/lib/db";
-import { auth } from "@/Auth";
+import { currentUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
+
+async function getOrCreateDbUser(clerkUser: any) {
+  const email = clerkUser.emailAddresses[0].emailAddress;
+  let dbUser = await User.findOne({ email }).select('-password');
+  
+  if (!dbUser) {
+    dbUser = await User.create({
+      name: clerkUser.firstName ? `${clerkUser.firstName} ${clerkUser.lastName || ""}`.trim() : clerkUser.username || "User",
+      email: email,
+      image: clerkUser.imageUrl,
+      role: "USER",
+    });
+  }
+  return dbUser;
+}
 
 export async function GET() {
   try {
+    const clerkUser = await currentUser();
+    if (!clerkUser || !clerkUser.emailAddresses?.[0]?.emailAddress) {
+       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     await connectDB();
-    const session = await auth();
+    const dbUser = await getOrCreateDbUser(clerkUser);
 
-    if (!session || !session.user || !session.user.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const user = await User.findById(session.user.id).select('-password');
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    const user = dbUser;
 
     // Get user stats
     const postsCount = await User.aggregate([

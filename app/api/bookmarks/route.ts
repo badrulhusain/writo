@@ -1,27 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB, User } from "@/lib/db";
 import Bookmark from "@/models/Bookmark";
-import { auth } from "@/Auth";
+import { currentUser } from "@/lib/auth";
 
 // POST /api/bookmarks - Add a bookmark
 export async function POST(req: NextRequest) {
   try {
-    await connectDB();
-    
-    const session = await auth();
-    if (!session || !session.user) {
+    const user = await currentUser();
+    if (!user || !user.emailAddresses?.[0]?.emailAddress) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { blogId } = await req.json();
-    
     if (!blogId) {
       return NextResponse.json({ error: "Missing blogId" }, { status: 400 });
     }
 
+    await connectDB();
+    const email = user.emailAddresses[0].emailAddress;
+    const dbUser = await User.findOne({ email });
+
+    if (!dbUser) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     // Check if bookmark already exists
     const existingBookmark = await Bookmark.findOne({
-      userId: session.user.id,
+      userId: dbUser._id,
       blogId
     });
 
@@ -30,7 +35,7 @@ export async function POST(req: NextRequest) {
     }
 
     const bookmark = await Bookmark.create({
-      userId: session.user.id,
+      userId: dbUser._id,
       blogId
     });
 
@@ -44,10 +49,8 @@ export async function POST(req: NextRequest) {
 // DELETE /api/bookmarks?blogId={id} - Remove a bookmark
 export async function DELETE(req: NextRequest) {
   try {
-    await connectDB()
-    
-    const session = await auth();
-    if (!session || !session.user) {
+    const user = await currentUser();
+    if (!user || !user.emailAddresses?.[0]?.emailAddress) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -58,8 +61,16 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Missing blogId parameter" }, { status: 400 });
     }
 
+    await connectDB();
+    const email = user.emailAddresses[0].emailAddress;
+    const dbUser = await User.findOne({ email });
+
+    if (!dbUser) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     const result = await Bookmark.deleteOne({
-      userId: session.user.id,
+      userId: dbUser._id,
       blogId
     });
 
@@ -77,10 +88,8 @@ export async function DELETE(req: NextRequest) {
 // GET /api/bookmarks?blogId={id} - Check if a blog is bookmarked by the user
 export async function GET(req: NextRequest) {
   try {
-    await connectDB();
-    
-    const session = await auth();
-    if (!session || !session.user) {
+    const user = await currentUser();
+    if (!user || !user.emailAddresses?.[0]?.emailAddress) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -91,8 +100,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Missing blogId parameter" }, { status: 400 });
     }
 
+    await connectDB();
+    const email = user.emailAddresses[0].emailAddress;
+    const dbUser = await User.findOne({ email });
+
+    if (!dbUser) {
+       return NextResponse.json({ isBookmarked: false });
+    }
+
     const bookmark = await Bookmark.findOne({
-      userId: session.user.id,
+      userId: dbUser._id,
       blogId
     });
 

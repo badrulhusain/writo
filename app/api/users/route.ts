@@ -1,4 +1,4 @@
-import { connectDB, User, Blog } from "@/lib/db";
+import { connectDB, User } from "@/lib/db";
 import { NextResponse } from "next/server";
 
 export async function GET() {

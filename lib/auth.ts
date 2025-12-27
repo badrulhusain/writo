@@ -1,13 +1,12 @@
-import { auth } from "@/Auth";
+import { currentUser as clerkCurrentUser, auth } from "@clerk/nextjs/server";
 
 export const currentUser = async () => {
-  const session = await auth();
-
-  return session?.user;
+  const user = await clerkCurrentUser();
+  return user;
 };
 
 export const currentRole = async () => {
-  const session = await auth();
-
-  return session?.user?.role;
+  const { sessionClaims } = await auth();
+  // @ts-expect-error: Clerk sessionClaims metadata role is not typed
+  return sessionClaims?.metadata?.role as "ADMIN" | "USER" | undefined;
 };

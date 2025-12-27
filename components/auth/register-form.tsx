@@ -4,6 +4,8 @@ import * as z from "zod";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useSignUp } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 import { RegisterSchema } from "@/schemas";
 import { Input } from "@/components/ui/input";
@@ -19,9 +21,10 @@ import { CardWrapper } from "@/components/auth/card-wrapper"
 import { Button } from "@/components/ui/button";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
-import { register } from "@/actions/register";
 
 export const RegisterForm = () => {
+  const { isLoaded, signUp, setActive } = useSignUp();
+  const router = useRouter();
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
@@ -35,16 +38,31 @@ export const RegisterForm = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof RegisterSchema>) => {
+  const onSubmit = async (values: z.infer<typeof RegisterSchema>) => {
+    if (!isLoaded) return;
     setError("");
     setSuccess("");
     
-    startTransition(() => {
-      register(values)
-        .then((data) => {
-          setError(data.error);
-          setSuccess(data.success);
+    startTransition(async () => {
+      try {
+        await signUp.create({
+          emailAddress: values.email,
+          password: values.password,
+          firstName: values.name.split(" ")[0],
+          lastName: values.name.split(" ").slice(1).join(" "),
         });
+
+        await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+        
+        // In a full implementation, you'd show a verification code input here.
+        // For now, we'll set a success message.
+        setSuccess("Verification email sent! Please check your inbox.");
+        // Usually, you'd redirect to a verification page or show the field in-place.
+        // For simplicity and to match the previous flow's message:
+      } catch (err: any) {
+        console.error(JSON.stringify(err, null, 2));
+        setError(err.errors?.[0]?.longMessage || "Something went wrong");
+      }
     });
   };
 

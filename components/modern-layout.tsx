@@ -16,13 +16,13 @@ import {
 import { Dock, DockIcon } from "@/components/ui/dock";
 import { cn } from "@/lib/utils";
 import {
-  FileText,
   Settings,
   User as UserIcon,
   Sparkles,
   HomeIcon,
-  ImageIcon
+  ShieldCheck
 } from "lucide-react";
+import { ModeToggle } from "@/components/mode-toggle";
 
 interface ModernLayoutProps {
   children: React.ReactNode;
@@ -33,11 +33,13 @@ export function ModernLayout({ children }: ModernLayoutProps) {
   const user = useCurrentUser();
 
   const navigation = [
+    { name: "Home", href: "/home", icon: HomeIcon },
 
-    { name: "Home", href: "/home", icon:HomeIcon },
-    { name: "Images", href: "/images", icon: ImageIcon },
-    { name: "Posts", href: "/blog", icon: FileText },
+
     { name: "Create Post", href: "/blog/create", icon: Sparkles },
+    ...(user?.role === "ADMIN"
+      ? [{ name: "Admin", href: "/admin", icon: ShieldCheck }]
+      : []),
     { name: "Profile", href: "/profile", icon: UserIcon },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
@@ -78,6 +80,17 @@ export function ModernLayout({ children }: ModernLayoutProps) {
                 </DockIcon>
               );
             })}
+
+            <DockIcon>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <ModeToggle />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Theme</p>
+                </TooltipContent>
+              </Tooltip>
+            </DockIcon>
 
             <Separator orientation="vertical" className="h-5 lg:h-6" />
 

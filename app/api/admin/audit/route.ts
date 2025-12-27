@@ -18,7 +18,7 @@ export async function GET(request: Request) {
       .lean();
     
     return NextResponse.json({ logs });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch audit logs" },
       { status: 500 }

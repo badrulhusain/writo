@@ -3,7 +3,8 @@
 import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { useState, useTransition } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useSignIn } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 
@@ -21,9 +22,11 @@ import { CardWrapper } from "@/components/auth/card-wrapper"
 import { Button } from "@/components/ui/button";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
-import { login } from "@/actions/login";
+import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 
 export const LoginForm = () => {
+  const { signIn, setActive, isLoaded } = useSignIn();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
   const urlError = searchParams.get("error") === "OAuthAccountNotLinked"
@@ -40,31 +43,52 @@ export const LoginForm = () => {
     defaultValues: {
       email: "",
       password: "",
+      code: "",
     },
   });
 
-  const onSubmit = (values: z.infer<typeof LoginSchema>) => {
+  const onSubmit = async (values: z.infer<typeof LoginSchema>) => {
+    if (!isLoaded) return;
+
     setError("");
     setSuccess("");
     
-    startTransition(() => {
-      login(values, callbackUrl)
-        .then((data) => {
-          if (data?.error) {
-            form.reset();
-            setError(data.error);
-          }
+    startTransition(async () => {
+      try {
+        if (showTwoFactor) {
+          const result = await signIn.attemptSecondFactor({
+            strategy: "totp",
+            code: values.code || "",
+          });
 
-          if (data?.success) {
-            form.reset();
-            setSuccess(data.success);
+          if (result.status === "complete") {
+            await setActive({ session: result.createdSessionId });
+            router.push(callbackUrl || DEFAULT_LOGIN_REDIRECT);
+          } else {
+            setError("Invalid 2FA code");
           }
+          return;
+        }
 
-          if (data?.twoFactor) {
-            setShowTwoFactor(true);
-          }
-        })
-        .catch(() => setError("Something went wrong"));
+        const result = await signIn.create({
+          identifier: values.email,
+          password: values.password,
+        });
+
+        if (result.status === "complete") {
+          await setActive({ session: result.createdSessionId });
+          router.push(callbackUrl || DEFAULT_LOGIN_REDIRECT);
+        } else if (result.status === "needs_second_factor") {
+          setShowTwoFactor(true);
+        } else {
+          console.error(JSON.stringify(result, null, 2));
+          setError("Something went wrong");
+        }
+      } catch (err: any) {
+        console.error(err);
+        const errorMessage = err.errors?.[0]?.longMessage || "Invalid credentials";
+        setError(errorMessage);
+      }
     });
   };
 

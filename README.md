@@ -9,7 +9,6 @@ npm i
 ```
 
 ### Setup .env file
-i am doing dome changes
 
 
 ```js
@@ -41,7 +40,6 @@ npx prisma db push
 npm run dev
 ```
 
-## Available commands
 
 Running commands with npm `npm run [command]`
 

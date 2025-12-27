@@ -38,7 +38,7 @@ export async function GET(request: Request) {
         pages: Math.ceil(total / limit)
       }
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch users" },
       { status: 500 }
@@ -75,7 +75,7 @@ export async function PATCH(request: Request) {
     }
     
     return NextResponse.json({ user });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to update user" },
       { status: 500 }
@@ -108,7 +108,7 @@ export async function DELETE(request: Request) {
     }
     
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to delete user" },
       { status: 500 }

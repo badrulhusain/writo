@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Trash2, Eye, Edit } from "lucide-react";
@@ -21,11 +21,7 @@ export default function AdminPosts() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   
-  useEffect(() => {
-    fetchPosts();
-  }, [filter]);
-  
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     setLoading(true);
     try {
       const url = filter === "all" 
@@ -39,7 +35,11 @@ export default function AdminPosts() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
   
   const handleDelete = async (postId: string) => {
     if (!confirm("Are you sure you want to delete this post?")) return;

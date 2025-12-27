@@ -1,5 +1,5 @@
-import { connectDB, Blog, User, Category, Tag } from "@/lib/db";
-import { auth } from "@/Auth";
+import { connectDB, Blog, Like, User } from "@/lib/db";
+import { currentUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -15,36 +15,106 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ error: "Blog not found" }, { status: 404 });
     }
 
-    return NextResponse.json(blog);
+    // Convert to plain object and attach dynamic like information
+    const blogObj = blog.toObject ? blog.toObject() : blog;
+
+    // Get like count for this blog
+    const likeCount = await Like.countDocuments({ blogId: blog._id });
+
+    // Determine if the current user has liked the blog
+    let likedByCurrentUser = false;
+    try {
+      const user = await currentUser();
+      if (user && user.emailAddresses?.[0]?.emailAddress) {
+        const dbUser = await User.findOne({ email: user.emailAddresses[0].emailAddress });
+        if (dbUser) {
+           const existing = await Like.findOne({ blogId: blog._id, userId: dbUser._id });
+           likedByCurrentUser = Boolean(existing);
+        }
+      }
+    } catch (e) {
+      // If auth fails for some reason, just treat as not liked by current user
+      console.warn('Could not determine current user like state:', e);
+    }
+
+    return NextResponse.json({ ...blogObj, likeCount, likedByCurrentUser });
   } catch (error) {
     console.error('Error fetching blog:', error);
     return NextResponse.json({ error: "Failed to fetch blog" }, { status: 500 });
   }
 }
 
+// eslint-disable-next-line complexity
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await connectDB();
-    const session = await auth();
-    if (!session || !session.user || !session.user.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const user = await currentUser();
+    if (!user || !user.emailAddresses?.[0]?.emailAddress) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Resolve DB user
+    const dbUser = await User.findOne({ email: user.emailAddresses[0].emailAddress });
+    if (!dbUser) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const { id } = await params;
     const body = await req.json();
     const blog = await Blog.findById(id);
 
-    if (!blog || blog.authorId.toString() !== session.user.id) {
+    // Check permissions
+    const isAdmin = dbUser.role === "ADMIN";
+    // Normalize stored author id (handle populated author objects)
+    const blogAuthorId = blog?.authorId && (blog.authorId._id ? String(blog.authorId._id) : String(blog.authorId));
+
+    if (!blog || (!isAdmin && blogAuthorId !== String(dbUser._id))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const updatedBlog = await Blog.findByIdAndUpdate(id, {
-      title: body.title,
-      content: body.content,
-    }, { new: true })
+    const updates: Record<string, any> = {};
+
+    if (typeof body.title === "string") {
+      updates.title = body.title;
+    }
+
+    if (typeof body.content === "string") {
+      updates.content = body.content;
+    }
+
+    if (typeof body.status === "string") {
+      updates.status = body.status;
+    }
+
+    if (body.categoryId) {
+      updates.categoryId = body.categoryId;
+    }
+
+    if (Array.isArray(body.tags)) {
+      updates.tags = body.tags;
+    }
+
+    if (body.featuredImage) {
+      updates.featuredImage = body.featuredImage;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: "No valid fields provided" }, { status: 400 });
+    }
+
+    const updatedBlog = await Blog.findByIdAndUpdate(id, updates, { new: true })
       .populate('authorId', 'name email image')
       .populate('categoryId', 'name')
       .populate('tags', 'name');
 
-    return NextResponse.json(updatedBlog);
+    // attach latest likeCount after update
+    if (!updatedBlog) {
+        return NextResponse.json({ error: "Failed to fetch updated blog" }, { status: 500 });
+    }
+    const updatedObj = updatedBlog.toObject ? updatedBlog.toObject() : updatedBlog;
+    const likeCount = await Like.countDocuments({ blogId: updatedBlog._id });
+
+    return NextResponse.json({ ...updatedObj, likeCount });
   } catch (error) {
     console.error('Error updating blog:', error);
     return NextResponse.json({ error: "Failed to update blog" }, { status: 500 });
@@ -54,17 +124,31 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await connectDB();
-    const session = await auth();
-    if (!session || !session.user || !session.user.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const user = await currentUser();
+    if (!user || !user.emailAddresses?.[0]?.emailAddress) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Resolve DB user
+    const dbUser = await User.findOne({ email: user.emailAddresses[0].emailAddress });
+    if (!dbUser) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const { id } = await params;
     const blog = await Blog.findById(id);
 
-    if (!blog || blog.authorId.toString() !== session.user.id) {
+    const isAdmin = dbUser.role === "ADMIN";
+
+    const blogAuthorId = blog?.authorId && (blog.authorId._id ? String(blog.authorId._id) : String(blog.authorId));
+
+    if (!blog || (!isAdmin && blogAuthorId !== String(dbUser._id))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Delete blog and associated likes
     await Blog.findByIdAndDelete(id);
+    await Like.deleteMany({ blogId: id });
 
     return NextResponse.json({ message: "Blog deleted" });
   } catch (error) {

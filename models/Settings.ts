@@ -5,6 +5,8 @@ interface ISettings {
   value: string;
   category: string;
   description?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const SettingsSchema = new mongoose.Schema<ISettings>({

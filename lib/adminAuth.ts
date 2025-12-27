@@ -1,21 +1,23 @@
-import { auth } from "@/Auth";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 export async function requireAdmin() {
-  const session = await auth();
+  const { userId, sessionClaims } = await auth();
   
-  if (!session || !session.user) {
+  if (!userId) {
     redirect("/auth/login");
   }
   
-  if (session.user.role !== "ADMIN") {
+  // @ts-expect-error: Clerk sessionClaims metadata role is not typed
+  if (sessionClaims?.metadata?.role !== "ADMIN") {
     redirect("/");
   }
   
-  return session;
+  return { userId };
 }
 
 export async function isAdmin() {
-  const session = await auth();
-  return session?.user?.role === "ADMIN";
+  const { sessionClaims } = await auth();
+  // @ts-expect-error: Clerk sessionClaims metadata role is not typed
+  return sessionClaims?.metadata?.role === "ADMIN";
 }

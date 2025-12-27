@@ -1,9 +1,5 @@
 "use server";
 
-import { signOut } from "@/Auth";
-
 export const logout = async () => {
-  console.log("Logging out...");
-  
-  await signOut();
+  throw new Error("Logout action is deprecated. Use Clerk useClerk().signOut() on client.");
 };

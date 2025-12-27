@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +31,7 @@ interface AIToolsProps {
    onImageSelect?: (image: any) => void;
 }
 
+// eslint-disable-next-line complexity
 export function AITools({ content, onContentChange, onTitleChange, onAddTag, selectedImage: propSelectedImage, onImageSelect }: AIToolsProps) {
     const [suggestedTags, setSuggestedTags] = useState<string[]>([
       "Technology", "AI", "Web Development", "Next.js", "React", "JavaScript"
@@ -45,7 +47,7 @@ export function AITools({ content, onContentChange, onTitleChange, onAddTag, sel
       if (propSelectedImage !== undefined && propSelectedImage !== selectedImage) {
         setSelectedImage(propSelectedImage);
       }
-    }, [propSelectedImage]);
+    }, [propSelectedImage, selectedImage]);
 
    const callAI = async (operation: string) => {
      console.log("Calling AI with operation:", operation, "content length:", content?.length, "content preview:", content?.substring(0, 50));
@@ -260,10 +262,12 @@ export function AITools({ content, onContentChange, onTitleChange, onAddTag, sel
           {selectedImage ? (
             <div className="space-y-4">
               <div className="relative">
-                <img
+                <Image
                   src={selectedImage.thumb}
                   alt={selectedImage.alt}
                   className="w-full h-48 object-cover rounded-lg"
+                  width={600}
+                  height={300}
                 />
                 <Button
                   variant="destructive"
