@@ -15,27 +15,41 @@ export const settings = async (
 ) => {
   const user = await currentUser();
 
-  if (!user) {
+  if (!user || !user.emailAddresses?.[0]?.emailAddress) {
     return { error: "Unauthorized" }
   }
 
-  const dbUser = await getUserById(user.id!);
+  const email = user.emailAddresses[0].emailAddress;
+  let dbUser = await getUserByEmail(email);
 
   if (!dbUser) {
-    return { error: "Unauthorized" }
+    // Sync on demand
+    await connectDB();
+    const newUser = await User.create({
+      name: user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : user.username || "User",
+      email: email,
+      image: user.imageUrl,
+      role: "USER",
+    });
+    dbUser = {
+      ...newUser.toObject(),
+      id: (newUser as any)._id.toString(),
+    };
   }
 
-  if (user.isOAuth) {
+  const isOAuth = user.externalAccounts && user.externalAccounts.length > 0;
+
+  if (isOAuth) {
     values.email = undefined;
     values.password = undefined;
     values.newPassword = undefined;
     values.isTwoFactorEnabled = undefined;
   }
 
-  if (values.email && values.email !== user.email) {
+  if (values.email && values.email !== email) {
     const existingUser = await getUserByEmail(values.email);
 
-    if (existingUser && existingUser.id !== user.id) {
+    if (existingUser && existingUser.id !== dbUser.id) {
       return { error: "Email already in use!" }
     }
 

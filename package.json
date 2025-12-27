@@ -40,7 +40,7 @@
     "motion": "^12.23.16",
     "navbar": "^3.0.1",
     "next": "15.5.2",
-    "next-auth": "^5.0.0-beta.29",
+    "@clerk/nextjs": "^6.9.0",
     "next-themes": "^0.2.1",
     "openai": "^6.1.0",
     "postcss": "^8.5.6",

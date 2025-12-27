@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import Comment from "@/models/Comment";
-import { auth } from "@/Auth";
+import { auth } from "@/auth";
 
 // POST /api/comments - Create a new comment
 export async function POST(req: NextRequest) {

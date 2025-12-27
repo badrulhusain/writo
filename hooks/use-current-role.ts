@@ -1,7 +1,7 @@
-import { useSession } from "next-auth/react";
+import { useUser } from "@clerk/nextjs";
 
 export const useCurrentRole = () => {
-  const session = useSession();
+  const { user } = useUser();
 
-  return session.data?.user?.role;
+  return user?.publicMetadata?.role as "ADMIN" | "USER" | undefined;
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -19,7 +19,7 @@ interface Comment {
 }
 
 export default function Comments({ blogId }: { blogId: string }) {
-  const { data: session, status } = useSession();
+  const { user, isLoaded, isSignedIn } = useUser();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
@@ -89,7 +89,7 @@ export default function Comments({ blogId }: { blogId: string }) {
           <CardTitle>Comments ({comments.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          {status === "authenticated" ? (
+          {isSignedIn ? (
             <form onSubmit={handleSubmit} className="mb-6">
               <Textarea
                 value={newComment}

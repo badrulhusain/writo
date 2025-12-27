@@ -1,5 +1,5 @@
-import { connectDB, Like } from "@/lib/db";
-import { auth } from "@/Auth";
+import { connectDB, Like, User } from "@/lib/db";
+import { currentUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 
@@ -8,16 +8,20 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await connectDB();
-    const session = await auth();
-
-    if (!session || !session.user || !session.user.id) {
+    const user = await currentUser();
+    if (!user || !user.emailAddresses?.[0]?.emailAddress) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectDB();
+    const dbUser = await User.findOne({ email: user.emailAddresses[0].emailAddress });
+    if (!dbUser) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const { id } = await params;
     const blogId = id;
-    const userId = new mongoose.Types.ObjectId(session.user.id);
+    const userId = dbUser._id;
 
     // Check if like already exists
     const existingLike = await Like.findOne({
@@ -61,16 +65,19 @@ export async function GET(
     });
 
     // Check if current user liked it (if authenticated)
-    const session = await auth();
+    const user = await currentUser();
     let userLiked = false;
 
-    if (session?.user?.id) {
-      const userId = new mongoose.Types.ObjectId(session.user.id);
-      const existingLike = await Like.findOne({
-        userId,
-        blogId: new mongoose.Types.ObjectId(blogId)
-      });
-      userLiked = !!existingLike;
+    if (user && user.emailAddresses?.[0]?.emailAddress) {
+       const dbUser = await User.findOne({ email: user.emailAddresses[0].emailAddress });
+       if (dbUser) {
+          const userId = dbUser._id;
+          const existingLike = await Like.findOne({
+            userId,
+            blogId: new mongoose.Types.ObjectId(blogId)
+          });
+          userLiked = !!existingLike;
+       }
     }
 
     return NextResponse.json({ likeCount, userLiked });

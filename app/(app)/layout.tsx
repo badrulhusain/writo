@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { SessionProvider } from 'next-auth/react';
 import { ModernLayout } from "@/components/modern-layout";
 
 // Separate component that uses the session
@@ -41,10 +40,8 @@ export default function AppLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <SessionProvider>
-      <AppLayoutContent>
-        {children}
-      </AppLayoutContent>
-    </SessionProvider>
+    <AppLayoutContent>
+      {children}
+    </AppLayoutContent>
   );
 }

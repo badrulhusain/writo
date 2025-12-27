@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { connectDB, Blog, Category, Tag, User, Like } from "@/lib/db";
-import { auth } from "@/Auth";
+import { currentUser } from "@/lib/auth";
 import mongoose from "mongoose";
 import HomeClient from "./components/HomeClient";
 
@@ -8,8 +8,16 @@ import HomeClient from "./components/HomeClient";
 async function getData() {
   try {
     await connectDB();
-    const session = await auth();
-    const userId = session?.user?.id ? new mongoose.Types.ObjectId(session.user.id) : null;
+    const user = await currentUser();
+    let userId = null;
+
+    if (user && user.emailAddresses?.length > 0) {
+      const email = user.emailAddresses[0].emailAddress;
+      const dbUser = await User.findOne({ email });
+      if (dbUser) {
+        userId = dbUser._id;
+      }
+    }
 
     // 1. Fetch Blogs
     const blogs = await Blog.find({ status: "published" })

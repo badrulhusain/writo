@@ -1,5 +1,5 @@
-import { connectDB, Blog, Like } from "@/lib/db";
-import { auth } from "@/Auth";
+import { connectDB, Blog, Like, User } from "@/lib/db";
+import { currentUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 
@@ -25,10 +25,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     // Determine if the current user has liked the blog
     let likedByCurrentUser = false;
     try {
-      const session = await auth();
-      if (session && session.user && session.user.id) {
-        const existing = await Like.findOne({ blogId: blog._id, userId: session.user.id });
-        likedByCurrentUser = Boolean(existing);
+      const user = await currentUser();
+      if (user && user.emailAddresses?.[0]?.emailAddress) {
+        const dbUser = await User.findOne({ email: user.emailAddresses[0].emailAddress });
+        if (dbUser) {
+           const existing = await Like.findOne({ blogId: blog._id, userId: dbUser._id });
+           likedByCurrentUser = Boolean(existing);
+        }
       }
     } catch (e) {
       // If auth fails for some reason, just treat as not liked by current user
@@ -46,19 +49,28 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await connectDB();
-    const session = await auth();
-    if (!session || !session.user || !session.user.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const user = await currentUser();
+    if (!user || !user.emailAddresses?.[0]?.emailAddress) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Resolve DB user
+    const dbUser = await User.findOne({ email: user.emailAddresses[0].emailAddress });
+    if (!dbUser) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const { id } = await params;
     const body = await req.json();
     const blog = await Blog.findById(id);
 
-    const isAdmin = session.user.role === "ADMIN";
-
+    // Check permissions
+    // @ts-ignore
+    const isAdmin = dbUser.role === "ADMIN";
     // Normalize stored author id (handle populated author objects)
     const blogAuthorId = blog?.authorId && (blog.authorId._id ? String(blog.authorId._id) : String(blog.authorId));
 
-    if (!blog || (!isAdmin && blogAuthorId !== session.user.id)) {
+    if (!blog || (!isAdmin && blogAuthorId !== String(dbUser._id))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -114,17 +126,26 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await connectDB();
-    const session = await auth();
-    if (!session || !session.user || !session.user.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const user = await currentUser();
+    if (!user || !user.emailAddresses?.[0]?.emailAddress) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Resolve DB user
+    const dbUser = await User.findOne({ email: user.emailAddresses[0].emailAddress });
+    if (!dbUser) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const { id } = await params;
     const blog = await Blog.findById(id);
 
-    const isAdmin = session.user.role === "ADMIN";
+    // @ts-ignore
+    const isAdmin = dbUser.role === "ADMIN";
 
     const blogAuthorId = blog?.authorId && (blog.authorId._id ? String(blog.authorId._id) : String(blog.authorId));
 
-    if (!blog || (!isAdmin && blogAuthorId !== session.user.id)) {
+    if (!blog || (!isAdmin && blogAuthorId !== String(dbUser._id))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

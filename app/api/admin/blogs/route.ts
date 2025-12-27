@@ -1,16 +1,21 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/Auth";
-import { connectDB, Blog, Like } from "@/lib/db";
+import { connectDB, Blog, Like, User } from "@/lib/db";
+import { currentUser } from "@/lib/auth";
 
 export async function GET(req: Request) {
   try {
-    const session = await auth();
-
-    if (!session?.user || session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const user = await currentUser();
+    if (!user || !user.emailAddresses?.[0]?.emailAddress) {
+       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     await connectDB();
+    const dbUser = await User.findOne({ email: user.emailAddresses[0].emailAddress });
+    
+    // @ts-ignore
+    if (!dbUser || dbUser.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");

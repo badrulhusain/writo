@@ -1,20 +1,28 @@
 import { connectDB, User } from "@/lib/db";
-import { auth } from "@/Auth";
+import { currentUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
+    const clerkUser = await currentUser();
+    if (!clerkUser || !clerkUser.emailAddresses?.[0]?.emailAddress) {
+       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     await connectDB();
-    const session = await auth();
-
-    if (!session || !session.user || !session.user.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    let dbUser = await User.findOne({ email: clerkUser.emailAddresses[0].emailAddress }).select('-password');
+    
+    if (!dbUser) {
+      // Sync on demand: Create user if they exist in Clerk but not in our DB
+      dbUser = await User.create({
+        name: clerkUser.firstName ? `${clerkUser.firstName} ${clerkUser.lastName || ""}`.trim() : clerkUser.username || "User",
+        email: clerkUser.emailAddresses[0].emailAddress,
+        image: clerkUser.imageUrl,
+        role: "USER",
+      });
     }
 
-    const user = await User.findById(session.user.id).select('-password');
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    const user = dbUser;
 
     // Get user stats
     const postsCount = await User.aggregate([

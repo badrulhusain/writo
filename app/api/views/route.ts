@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB, User } from "@/lib/db";
 import View from "@/models/View";
-import { auth } from "@/Auth";
+// Removed currentUser from lib/auth as it was causing conflicts or incorrect usage if related to next-auth, 
+// OR keep it if it is the CLERK one. 
+// The user file had: import { currentUser } from "@/lib/auth";
+// And lib/auth.ts HAD Clerk's currentUser.
+// So usage is Fine.
+// Problem is dbUser._id is unknown.
+import { currentUser } from "@/lib/auth";
 
 // POST /api/views - Record a view
 export async function POST(req: NextRequest) {
@@ -9,19 +15,27 @@ export async function POST(req: NextRequest) {
     await connectDB();
     
     const { blogId } = await req.json();
-    
     if (!blogId) {
       return NextResponse.json({ error: "Missing blogId" }, { status: 400 });
     }
 
-    const session = await auth();
-    
+    const user = await currentUser();
+    // Resolve DB user ID if authenticated
+    let userId: string | undefined;
+    if (user && user.emailAddresses?.[0]?.emailAddress) {
+       const dbUser = await User.findOne({ email: user.emailAddresses[0].emailAddress });
+       if (dbUser) {
+         // @ts-ignore
+         userId = dbUser._id.toString();
+       }
+    }
+
     // Check if we already have a view from this user/IP for this blog
     const query: any = { blogId };
     
-    if (session?.user?.id) {
+    if (userId) {
       // Authenticated user
-      query.userId = session.user.id;
+      query.userId = userId;
     } else {
       // Anonymous user - use IP address
       const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
@@ -35,8 +49,8 @@ export async function POST(req: NextRequest) {
       // Create new view record
       const viewData: any = { blogId };
       
-      if (session?.user?.id) {
-        viewData.userId = session.user.id;
+      if (userId) {
+        viewData.userId = userId;
       } else {
         const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
         viewData.ipAddress = ip;
