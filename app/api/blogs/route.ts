@@ -1,58 +1,20 @@
 import { connectDB, Blog, Category, Tag, Like, User } from "@/lib/db";
 import { currentUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import { getHomeData } from "@/lib/services/blog-service";
 
 
 export async function GET() {
   try {
-    await connectDB();
-
-
-    const blogs = await Blog.find({ status: "published" })
-      .populate('authorId', 'name email')
-      .populate('categoryId', 'name')
-      .populate('tags', 'name')
-      .sort({ createdAt: -1 });
-
-    // Aggregate like counts
-    const blogIds = blogs.map((b: any) => b._id);
-    const likeCounts = await Like.aggregate([
-      { $match: { blogId: { $in: blogIds } } },
-      { $group: { _id: "$blogId", count: { $sum: 1 } } }
-    ]);
-
-    const likeMap = new Map<string, number>();
-    likeCounts.forEach((lc: any) => {
-      likeMap.set(String(lc._id), lc.count);
-    });
-
-    // Get user likes if authenticated
-    const userLikesSet = new Set<string>();
-    
     const user = await currentUser();
+    let userId = null;
     if (user && user.emailAddresses?.[0]?.emailAddress) {
-       const dbUser = await User.findOne({ email: user.emailAddresses[0].emailAddress });
-       if (dbUser) {
-          const userId = dbUser._id;
-          const userLikes = await Like.find({ 
-            userId, 
-            blogId: { $in: blogIds } 
-          });
-          userLikes.forEach((like: any) => {
-            userLikesSet.add(String(like.blogId));
-          });
-       }
+       const dbUser = await User.findOne({ email: user.emailAddresses[0].emailAddress }) as any;
+       if (dbUser) userId = dbUser._id.toString();
     }
 
-    // Attach likeCount and userLiked to each blog object
-    const blogsWithLikes = blogs.map((blog: any) => ({
-      ...blog.toObject ? blog.toObject() : blog,
-      likeCount: likeMap.get(String(blog._id)) || 0,
-      userLiked: userLikesSet.has(String(blog._id))
-    }));
-
-    console.log(`Fetched ${blogs.length} published blogs`);
-    return NextResponse.json(blogsWithLikes);
+    const { blogs } = await getHomeData(userId);
+    return NextResponse.json(blogs);
   } catch (error) {
     console.error('Error fetching blogs:', error);
     return NextResponse.json({ error: "Failed to fetch blogs" }, { status: 500 });
