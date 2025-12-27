@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -318,10 +319,12 @@ export default function ProfilePage() {
               <Card key={post._id} className="flex flex-col overflow-hidden">
                 {post.featuredImage && (
                   <div className="relative h-48 w-full">
-                    <img 
+                    <Image 
                       src={post.featuredImage.url} 
                       alt={post.featuredImage.alt || post.title}
                       className="w-full h-full object-cover"
+                      width={400}
+                      height={200}
                     />
                     <div className="absolute top-2 right-2">
                       <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>

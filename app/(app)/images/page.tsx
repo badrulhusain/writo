@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -76,10 +77,12 @@ export default function ImagesPage() {
           {images.map((blog) => (
             <Card key={blog._id} className="group overflow-hidden hover:shadow-lg transition-shadow">
               <div className="relative aspect-square overflow-hidden">
-                <img
+                <Image
                   src={blog.featuredImage.url}
                   alt={blog.featuredImage.alt}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  width={400}
+                  height={400}
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
                 <div className="absolute bottom-0 left-0 right-0 p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">

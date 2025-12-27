@@ -18,7 +18,6 @@ export const Social = () => {
 
     const strategy = provider === "google" ? "oauth_google" : "oauth_github";
     
-    // @ts-ignore
     signIn.authenticateWithRedirect({
       strategy,
       redirectUrl: "/sso-callback",

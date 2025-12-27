@@ -55,7 +55,7 @@ export async function GET() {
       topPostsByLikes,
       topPostsByComments
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch analytics" },
       { status: 500 }

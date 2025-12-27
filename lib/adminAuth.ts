@@ -8,7 +8,7 @@ export async function requireAdmin() {
     redirect("/auth/login");
   }
   
-  // @ts-ignore
+  // @ts-expect-error: Clerk sessionClaims metadata role is not typed
   if (sessionClaims?.metadata?.role !== "ADMIN") {
     redirect("/");
   }
@@ -18,6 +18,6 @@ export async function requireAdmin() {
 
 export async function isAdmin() {
   const { sessionClaims } = await auth();
-  // @ts-ignore
+  // @ts-expect-error: Clerk sessionClaims metadata role is not typed
   return sessionClaims?.metadata?.role === "ADMIN";
 }

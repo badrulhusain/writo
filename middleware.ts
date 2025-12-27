@@ -13,10 +13,8 @@ const isAuthRoute = createRouteMatcher(authRoutes);
 export default clerkMiddleware(async (auth, req) => {
   const { userId } = await auth();
   const { nextUrl } = req;
-  const isLoggedIn = !!userId;
 
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
-  const isAccessingDefaultRedirect = nextUrl.pathname === DEFAULT_LOGIN_REDIRECT;
 
   // 1. If it's an API auth route (like /api/auth/...), let it pass (though we might not need this with Clerk)
   if (isApiAuthRoute) {

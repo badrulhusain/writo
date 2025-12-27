@@ -1,13 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB, User } from "@/lib/db";
 import View from "@/models/View";
-// Removed currentUser from lib/auth as it was causing conflicts or incorrect usage if related to next-auth, 
-// OR keep it if it is the CLERK one. 
-// The user file had: import { currentUser } from "@/lib/auth";
-// And lib/auth.ts HAD Clerk's currentUser.
-// So usage is Fine.
-// Problem is dbUser._id is unknown.
 import { currentUser } from "@/lib/auth";
+
+async function getUserId(user: any) {
+  if (user && user.emailAddresses?.[0]?.emailAddress) {
+    const dbUser = await User.findOne({ email: user.emailAddresses[0].emailAddress });
+    if (dbUser) {
+      // @ts-expect-error: mongoose document _id type mismatch with string
+      return dbUser._id.toString();
+    }
+  }
+  return undefined;
+}
+
+async function recordViewIfNotExists(blogId: string, userId: string | undefined, req: NextRequest) {
+  const query: any = { blogId };
+  
+  if (userId) {
+    query.userId = userId;
+  } else {
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    query.ipAddress = ip;
+  }
+  
+  const existingView = await View.findOne(query);
+  
+  if (!existingView) {
+    const viewData: any = { blogId };
+    
+    if (userId) {
+      viewData.userId = userId;
+    } else {
+      const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+      viewData.ipAddress = ip;
+    }
+    
+    viewData.userAgent = req.headers.get('user-agent') || '';
+    await View.create(viewData);
+  }
+}
 
 // POST /api/views - Record a view
 export async function POST(req: NextRequest) {
@@ -20,48 +52,9 @@ export async function POST(req: NextRequest) {
     }
 
     const user = await currentUser();
-    // Resolve DB user ID if authenticated
-    let userId: string | undefined;
-    if (user && user.emailAddresses?.[0]?.emailAddress) {
-       const dbUser = await User.findOne({ email: user.emailAddresses[0].emailAddress });
-       if (dbUser) {
-         // @ts-ignore
-         userId = dbUser._id.toString();
-       }
-    }
+    const userId = await getUserId(user);
 
-    // Check if we already have a view from this user/IP for this blog
-    const query: any = { blogId };
-    
-    if (userId) {
-      // Authenticated user
-      query.userId = userId;
-    } else {
-      // Anonymous user - use IP address
-      const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-      query.ipAddress = ip;
-    }
-    
-    // Check if view already exists
-    const existingView = await View.findOne(query);
-    
-    if (!existingView) {
-      // Create new view record
-      const viewData: any = { blogId };
-      
-      if (userId) {
-        viewData.userId = userId;
-      } else {
-        const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-        viewData.ipAddress = ip;
-      }
-      
-      viewData.userAgent = req.headers.get('user-agent') || '';
-      
-      await View.create(viewData);
-    }
-    
-    // Get total view count for this blog
+    await recordViewIfNotExists(blogId, userId, req);
     const viewCount = await View.countDocuments({ blogId });
     
     return NextResponse.json({ viewCount });

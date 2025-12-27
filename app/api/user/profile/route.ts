@@ -2,6 +2,21 @@ import { connectDB, User } from "@/lib/db";
 import { currentUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
+async function getOrCreateDbUser(clerkUser: any) {
+  const email = clerkUser.emailAddresses[0].emailAddress;
+  let dbUser = await User.findOne({ email }).select('-password');
+  
+  if (!dbUser) {
+    dbUser = await User.create({
+      name: clerkUser.firstName ? `${clerkUser.firstName} ${clerkUser.lastName || ""}`.trim() : clerkUser.username || "User",
+      email: email,
+      image: clerkUser.imageUrl,
+      role: "USER",
+    });
+  }
+  return dbUser;
+}
+
 export async function GET() {
   try {
     const clerkUser = await currentUser();
@@ -10,17 +25,7 @@ export async function GET() {
     }
 
     await connectDB();
-    let dbUser = await User.findOne({ email: clerkUser.emailAddresses[0].emailAddress }).select('-password');
-    
-    if (!dbUser) {
-      // Sync on demand: Create user if they exist in Clerk but not in our DB
-      dbUser = await User.create({
-        name: clerkUser.firstName ? `${clerkUser.firstName} ${clerkUser.lastName || ""}`.trim() : clerkUser.username || "User",
-        email: clerkUser.emailAddresses[0].emailAddress,
-        image: clerkUser.imageUrl,
-        role: "USER",
-      });
-    }
+    const dbUser = await getOrCreateDbUser(clerkUser);
 
     const user = dbUser;
 

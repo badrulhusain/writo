@@ -6,13 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   FileText,
-  Users,
-  TrendingUp,
-  Calendar,
   Plus,
   BarChart3,
   Eye,
-  MessageCircle,
   Heart,
   Search,
   Filter

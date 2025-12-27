@@ -10,7 +10,7 @@ async function test() {
     // Create a dummy user
     const email = `test-${Date.now()}@example.com`;
     const password = 'password123';
-    const user = await User.create({
+    await User.create({
       name: 'Test User',
       email,
       password,

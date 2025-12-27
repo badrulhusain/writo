@@ -19,7 +19,7 @@ interface Comment {
 }
 
 export default function Comments({ blogId }: { blogId: string }) {
-  const { user, isLoaded, isSignedIn } = useUser();
+  const { isSignedIn } = useUser();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);

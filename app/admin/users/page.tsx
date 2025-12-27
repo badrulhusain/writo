@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
-import { Trash2, Shield, User } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 interface UserData {
   _id: string;

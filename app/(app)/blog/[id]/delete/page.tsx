@@ -40,7 +40,7 @@ const DeleteBlogPost = () => {
         try {
           const data = JSON.parse(text);
           setBlog(data);
-        } catch (parseError) {
+        } catch {
           throw new Error('Invalid JSON response from server');
         }
       } catch (err: any) {

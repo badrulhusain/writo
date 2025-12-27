@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { connectDB, Blog, Category, Tag, User, Like } from "@/lib/db";
 import { currentUser } from "@/lib/auth";
-import mongoose from "mongoose";
 import HomeClient from "./components/HomeClient";
 
 // Helper to fetch data directly from DB

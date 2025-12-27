@@ -12,7 +12,6 @@ export async function GET(req: Request) {
     await connectDB();
     const dbUser = await User.findOne({ email: user.emailAddresses[0].emailAddress });
     
-    // @ts-ignore
     if (!dbUser || dbUser.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

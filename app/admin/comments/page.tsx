@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Check, X, Trash2 } from "lucide-react";
@@ -24,11 +24,7 @@ export default function AdminComments() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("pending");
   
-  useEffect(() => {
-    fetchComments();
-  }, [filter]);
-  
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`/api/admin/comments?status=${filter}`);
@@ -39,7 +35,11 @@ export default function AdminComments() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchComments();
+  }, [fetchComments]);
   
   const handleStatusChange = async (commentId: string, newStatus: string) => {
     try {

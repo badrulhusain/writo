@@ -19,7 +19,7 @@ export async function GET(request: Request) {
       .lean();
     
     return NextResponse.json({ comments });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch comments" },
       { status: 500 }
@@ -56,7 +56,7 @@ export async function PATCH(request: Request) {
     }
     
     return NextResponse.json({ comment });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to update comment" },
       { status: 500 }
@@ -89,7 +89,7 @@ export async function DELETE(request: Request) {
     }
     
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to delete comment" },
       { status: 500 }

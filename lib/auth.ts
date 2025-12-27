@@ -7,6 +7,6 @@ export const currentUser = async () => {
 
 export const currentRole = async () => {
   const { sessionClaims } = await auth();
-  // @ts-ignore
+  // @ts-expect-error: Clerk sessionClaims metadata role is not typed
   return sessionClaims?.metadata?.role as "ADMIN" | "USER" | undefined;
 };

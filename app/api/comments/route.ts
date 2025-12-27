@@ -1,16 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
+import {  connectDB, User } from "@/lib/db";
 import Comment from "@/models/Comment";
-import { auth } from "@/auth";
+import { currentUser } from "@/lib/auth";
 
 // POST /api/comments - Create a new comment
 export async function POST(req: NextRequest) {
   try {
-    await dbConnect();
+    await connectDB();
     
-    const session = await auth();
-    if (!session || !session.user) {
+    const user = await currentUser();
+    if (!user || !user.emailAddresses?.[0]?.emailAddress) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Resolve DB user
+    const dbUser = await User.findOne({ email: user.emailAddresses[0].emailAddress });
+    if (!dbUser) {
+        return NextResponse.json({ error: "Unauthorized - User not found in DB" }, { status: 401 });
     }
 
     const { content, blogId, parentId } = await req.json();
@@ -21,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     const comment = await Comment.create({
       content,
-      authorId: session.user.id,
+      authorId: dbUser._id,
       blogId,
       parentId: parentId || null
     });
@@ -36,7 +42,7 @@ export async function POST(req: NextRequest) {
 // GET /api/comments?blogId={id} - Get comments for a blog post
 export async function GET(req: NextRequest) {
   try {
-    await dbConnect();
+    await connectDB();
     
     const { searchParams } = new URL(req.url);
     const blogId = searchParams.get("blogId");

@@ -1,7 +1,6 @@
 import { connectDB, Blog, Like, User } from "@/lib/db";
 import { currentUser } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -65,7 +64,6 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const blog = await Blog.findById(id);
 
     // Check permissions
-    // @ts-ignore
     const isAdmin = dbUser.role === "ADMIN";
     // Normalize stored author id (handle populated author objects)
     const blogAuthorId = blog?.authorId && (blog.authorId._id ? String(blog.authorId._id) : String(blog.authorId));
@@ -140,7 +138,6 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     const { id } = await params;
     const blog = await Blog.findById(id);
 
-    // @ts-ignore
     const isAdmin = dbUser.role === "ADMIN";
 
     const blogAuthorId = blog?.authorId && (blog.authorId._id ? String(blog.authorId._id) : String(blog.authorId));

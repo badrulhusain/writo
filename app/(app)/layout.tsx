@@ -1,7 +1,11 @@
 "use client";
 
 import React from "react";
+import { Newsreader, Noto_Sans } from "next/font/google";
 import { ModernLayout } from "@/components/modern-layout";
+
+const newsreader = Newsreader({ subsets: ["latin"], weight: ["400", "500", "700", "800"], variable: "--font-newsreader" });
+const notoSans = Noto_Sans({ subsets: ["latin"], weight: ["400", "500", "700", "900"], variable: "--font-noto-sans" });
 
 // Separate component that uses the session
 const AppLayoutContent = ({
@@ -10,27 +14,22 @@ const AppLayoutContent = ({
   children: React.ReactNode;
 }) => {
   return (
-    <>
-      <link
-        href="https://fonts.googleapis.com/css2?display=swap&family=Inter:wght@400;500;700;900&family=Newsreader:wght@400;500;700;800&family=Noto+Sans:wght@400;500;700;900"
-        rel="stylesheet"
-      />
-      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-      <style jsx>{`
+    <div className={`${newsreader.variable} ${notoSans.variable}`}>
+      <style jsx global>{`
         :root {
           --primary-color: #1173d4;
         }
         .font-newsreader {
-          font-family: "Newsreader", serif;
+          font-family: var(--font-newsreader), serif;
         }
         .font-noto-sans {
-          font-family: "Noto Sans", sans-serif;
+          font-family: var(--font-noto-sans), sans-serif;
         }
       `}</style>
       <ModernLayout>
         {children}
       </ModernLayout>
-    </>
+    </div>
   );
 };
 

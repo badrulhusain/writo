@@ -16,14 +16,13 @@ import {
 import { Dock, DockIcon } from "@/components/ui/dock";
 import { cn } from "@/lib/utils";
 import {
-  FileText,
   Settings,
   User as UserIcon,
   Sparkles,
   HomeIcon,
-  ImageIcon,
   ShieldCheck
 } from "lucide-react";
+import { ModeToggle } from "@/components/mode-toggle";
 
 interface ModernLayoutProps {
   children: React.ReactNode;
@@ -81,6 +80,17 @@ export function ModernLayout({ children }: ModernLayoutProps) {
                 </DockIcon>
               );
             })}
+
+            <DockIcon>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <ModeToggle />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Theme</p>
+                </TooltipContent>
+              </Tooltip>
+            </DockIcon>
 
             <Separator orientation="vertical" className="h-5 lg:h-6" />
 

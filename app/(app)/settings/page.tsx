@@ -10,15 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import {
-  Bell,
-  Palette,
-  Shield,
   Save,
   User,
   Mail,
   MapPin,
-  Link as LinkIcon,
-  Key
+  Link as LinkIcon
 } from "lucide-react";
 import { settings } from "@/actions/settings";
 import { toast } from "sonner";
@@ -91,9 +87,9 @@ export default function SettingsPage() {
         location,
         website,
       }).then((data) => {
-        if (data.error) {
+        if (data && 'error' in data) {
           toast.error(data.error);
-        } else if (data.success) {
+        } else if (data && 'success' in data) {
           toast.success(data.success);
           fetchProfile(); // Refresh data
         }
@@ -112,9 +108,9 @@ export default function SettingsPage() {
         password: currentPassword,
         newPassword,
       }).then((data) => {
-        if (data.error) {
+        if (data && 'error' in data) {
           toast.error(data.error);
-        } else if (data.success) {
+        } else if (data && 'success' in data) {
           toast.success(data.success);
           setCurrentPassword("");
           setNewPassword("");

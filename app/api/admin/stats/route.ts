@@ -36,7 +36,7 @@ export async function GET() {
       draftPosts,
       adminUsers
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch stats" },
       { status: 500 }
